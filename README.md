@@ -11,7 +11,7 @@ Small cross-platform desktop mail GUI built with Tauri, TypeScript, React, and V
 - Search across sender, subject, body, preview, and labels.
 - Reader actions for reply, star, archive, and trash.
 - Composer window with validation and local sent-message creation.
-- GitHub Actions CI across Windows and macOS.
+- GitHub Actions CI for Windows visual QA and package smoke, with non-blocking macOS smoke while Linux is paused.
 - Tagged Tauri release workflow for small native desktop bundles.
 - WebGL material shader background with automated visual validation.
 

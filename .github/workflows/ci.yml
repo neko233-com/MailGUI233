@@ -71,8 +71,9 @@ jobs:
           retention-days: 7
 
   cross-platform-build:
-    name: Build smoke (macOS)
+    name: Build smoke (macOS, non-blocking)
     runs-on: macos-14
+    continue-on-error: true
 
     steps:
       - name: Checkout

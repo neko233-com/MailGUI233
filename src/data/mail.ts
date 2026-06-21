@@ -341,7 +341,7 @@ export const initialMessages: MailMessage[] = [
     folder: "inbox",
     from: { name: "Build Bot", address: "ci@github.com" },
     to: [{ name: "Desk", address: "desk@neko233.com" }],
-    subject: "main build passed on Windows and macOS",
+    subject: "main build passed on Windows",
     preview: "Typecheck, renderer build, and Tauri desktop compile completed successfully.",
     body:
       "Workflow result: passed\n\nJobs:\n- ubuntu-latest: passed\n- windows-latest: passed\n- macos-latest: passed\n\nArtifacts are ready for manual release packaging.",
