@@ -72,7 +72,7 @@ jobs:
 
   cross-platform-build:
     name: Build smoke (macOS)
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
       - name: Checkout

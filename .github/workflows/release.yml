@@ -26,7 +26,7 @@ jobs:
           - os: windows-latest
             package-args: --bundles nsis --no-sign
             artifact-name: MailGUI233-windows
-          - os: macos-latest
+          - os: macos-14
             package-args: --bundles dmg --no-sign
             artifact-name: MailGUI233-macos
 
