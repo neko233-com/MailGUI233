@@ -2,6 +2,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-r
 import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { useI18n } from "../i18n";
+import { accountDisplayName, providerDisplayNameById } from "../lib/displayNames";
 import type {
   Account,
   AccountScope,
@@ -110,7 +111,7 @@ export function SchedulePanel({
   messages,
   events
 }: SchedulePanelProps) {
-  const { locale, t } = useI18n();
+  const { locale, resolvedLanguage, t } = useI18n();
   const [viewMode, setViewMode] = useState<ScheduleViewMode>("day");
   const [visibleDate, setVisibleDate] = useState(anchorDate);
   const dayFormatter = useMemo(
@@ -152,9 +153,11 @@ export function SchedulePanel({
   const accountById = useMemo(() => new Map(accounts.map((account) => [account.id, account])), [accounts]);
   const scopeTitle =
     activeAccountId !== "all"
-      ? accountById.get(activeAccountId)?.name ?? t("mailbox")
+      ? accountById.get(activeAccountId)
+        ? accountDisplayName(accountById.get(activeAccountId)!, resolvedLanguage)
+        : t("mailbox")
       : activeProviderId !== "all"
-        ? `${activeProviderId.toUpperCase()} ${t("mail")}`
+        ? providerDisplayNameById(activeProviderId, resolvedLanguage)
         : t("allMailboxes");
   const weekDays = useMemo(() => {
     const first = startOfWeek(visibleDate);

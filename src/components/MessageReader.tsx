@@ -1,5 +1,6 @@
 import { Archive, Mail, Reply, Star, Trash2 } from "lucide-react";
 import { useI18n } from "../i18n";
+import { accountDisplayName, providerDisplayNameById } from "../lib/displayNames";
 import type { Account, MailMessage } from "../types";
 
 interface MessageReaderProps {
@@ -19,7 +20,7 @@ export function MessageReader({
   onReply,
   onToggleStar
 }: MessageReaderProps) {
-  const { locale, t } = useI18n();
+  const { locale, resolvedLanguage, t } = useI18n();
   const longDate = new Intl.DateTimeFormat(locale, {
     dateStyle: "full",
     timeStyle: "short"
@@ -42,7 +43,7 @@ export function MessageReader({
           <h2>{message.subject}</h2>
           {account ? (
             <span className="reader-channel">
-              {account.provider.toUpperCase()} / {account.name} / {account.status.replace("-", " ")}
+              {providerDisplayNameById(account.provider, resolvedLanguage)} / {accountDisplayName(account, resolvedLanguage)} / {account.status.replace("-", " ")}
             </span>
           ) : null}
           <p>

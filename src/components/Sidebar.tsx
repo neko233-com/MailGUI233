@@ -3,6 +3,8 @@ import {
   CalendarDays,
   FileText,
   Inbox,
+  MailPlus,
+  Search,
   Send,
   Settings,
   SlidersHorizontal,
@@ -10,8 +12,10 @@ import {
   Trash2
 } from "lucide-react";
 import type { CSSProperties } from "react";
+import { useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { useI18n } from "../i18n";
+import { accountDisplayName } from "../lib/displayNames";
 import { LogoMark } from "./LogoMark";
 import type { Account, AccountScope, Folder, FolderId, MailboxTabId, MailMessage } from "../types";
 
@@ -62,6 +66,8 @@ interface SidebarProps {
   messages: MailMessage[];
   onAccountChange: (accountId: AccountScope) => void;
   onTabChange: (tabId: MailboxTabId) => void;
+  onAccountAdd: () => void;
+  onAccountDelete: () => void;
 }
 
 function accountInitials(name: string) {
@@ -84,12 +90,35 @@ export function Sidebar({
   activeTab,
   messages,
   onAccountChange,
-  onTabChange
+  onTabChange,
+  onAccountAdd,
+  onAccountDelete
 }: SidebarProps) {
-  const { t } = useI18n();
+  const { resolvedLanguage, t } = useI18n();
+  const [accountQuery, setAccountQuery] = useState("");
   const folderById = new Map(folders.map((folder) => [folder.id, folder]));
   const activeAccount = activeAccountId === "all" ? undefined : accounts.find((account) => account.id === activeAccountId);
   const accountCountLabel = activeAccount ? activeAccount.address : t("mailboxes", { count: accounts.length });
+  const activeAccountName = activeAccount ? accountDisplayName(activeAccount, resolvedLanguage) : t("allMailboxes");
+  const filteredAccounts = useMemo(() => {
+    const normalized = accountQuery.trim().toLowerCase();
+
+    if (!normalized) {
+      return accounts;
+    }
+
+    return accounts.filter((account) =>
+      [
+        accountDisplayName(account, resolvedLanguage),
+        account.name,
+        account.address,
+        account.provider
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalized)
+    );
+  }, [accountQuery, accounts, resolvedLanguage]);
 
   const unreadForScope = (accountId: AccountScope) =>
     messages.filter((message) => scopeMatches(message, accountId) && message.unread && message.folder !== "trash").length;
@@ -110,6 +139,23 @@ export function Sidebar({
           <span>Mail233</span>
         </div>
 
+        <div className="mailbox-tools">
+          <label className="mailbox-search">
+            <Search size={15} />
+            <input
+              value={accountQuery}
+              onChange={(event) => setAccountQuery(event.target.value)}
+              placeholder={t("searchMailboxes")}
+            />
+          </label>
+          <button onClick={onAccountAdd} title={t("addMailbox")} type="button">
+            <MailPlus size={16} />
+          </button>
+          <button onClick={onAccountDelete} disabled={activeAccountId === "all"} title={t("deleteMailbox")} type="button">
+            <Trash2 size={16} />
+          </button>
+        </div>
+
         <div className="account-tablist" role="tablist" aria-orientation="vertical" aria-label={t("mailboxList")}>
           <button
             className={`account-tab ${activeAccountId === "all" ? "is-active" : ""}`}
@@ -124,29 +170,33 @@ export function Sidebar({
             <em>{unreadForScope("all")}</em>
           </button>
 
-          {accounts.map((account) => (
-            <button
-              key={account.id}
-              className={`account-tab status-${account.status} ${activeAccountId === account.id ? "is-active" : ""}`}
-              onClick={() => onAccountChange(account.id)}
-              role="tab"
-              aria-selected={activeAccountId === account.id}
-              aria-label={`${account.name}, ${account.provider.toUpperCase()}, ${account.status.replace("-", " ")}`}
-              style={{ "--account-accent": account.accent } as CSSProperties}
-              type="button"
-            >
-              <span className="account-glyph">{accountInitials(account.name)}</span>
-              <strong>{account.name.replace(" Mail", "")}</strong>
-              <em>{unreadForScope(account.id)}</em>
-            </button>
-          ))}
+          {filteredAccounts.map((account) => {
+            const displayName = accountDisplayName(account, resolvedLanguage);
+
+            return (
+              <button
+                key={account.id}
+                className={`account-tab status-${account.status} ${activeAccountId === account.id ? "is-active" : ""}`}
+                onClick={() => onAccountChange(account.id)}
+                role="tab"
+                aria-selected={activeAccountId === account.id}
+                aria-label={`${displayName}, ${account.provider.toUpperCase()}, ${account.status.replace("-", " ")}`}
+                style={{ "--account-accent": account.accent } as CSSProperties}
+                type="button"
+              >
+                <span className="account-glyph">{accountInitials(displayName)}</span>
+                <strong>{displayName}</strong>
+                <em>{unreadForScope(account.id)}</em>
+              </button>
+            );
+          })}
         </div>
       </section>
 
       <section className="function-column" aria-label={t("mailboxFunctions")}>
         <header className="function-header">
           <span>{t("mailbox")}</span>
-          <strong>{activeAccount?.name ?? t("allMailboxes")}</strong>
+          <strong>{activeAccountName}</strong>
           <small>{accountCountLabel}</small>
         </header>
 

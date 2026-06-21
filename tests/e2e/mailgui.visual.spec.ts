@@ -59,6 +59,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     });
 
     await page.addInitScript(() => {
+      window.localStorage.setItem("mailgui233.demoData", "true");
       window.localStorage.setItem("mailgui233.language", "en");
     });
     await page.goto("/");
@@ -79,7 +80,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     test.skip(testInfo.project.name !== "chromium-desktop", "Desktop viewport coverage test");
 
     await expect(page.getByRole("tab", { name: /Personal Gmail/i })).toBeInViewport();
-    await expect(page.getByRole("tab", { name: /QQ Mail/i })).toBeInViewport();
+    await expect(page.getByRole("tab", { name: /^QQ,/i })).toBeInViewport();
     await expect(page.getByRole("tab", { name: /QQ Work/i })).toBeInViewport();
     await expect(page.getByRole("tab", { name: /Studio Outlook/i })).toBeInViewport();
     await expect(page.getByRole("tab", { name: /iCloud/i })).toBeInViewport();
@@ -94,21 +95,27 @@ test.describe("MailGUI233 visual mailbox QA", () => {
 
     await page.getByLabel("Language").selectOption("zh");
     await expect(page.getByRole("tab", { name: /所有邮箱/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /^QQ邮箱,/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /工作QQ邮箱/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: "收件箱" })).toBeVisible();
     await expect(page.getByPlaceholder("搜索发件人、主题、tag:安全、provider:qq")).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mailgui233.language"))).toBe("zh");
     await page.getByLabel("语言").selectOption("en");
     await expect(page.getByRole("tab", { name: /All mailboxes/i })).toBeVisible();
+    await page.getByPlaceholder("Search mailboxes").fill("qq work");
+    await expect(page.getByRole("tab", { name: /QQ Work/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Personal Gmail/i })).toHaveCount(0);
+    await page.getByPlaceholder("Search mailboxes").fill("");
 
-    await page.getByRole("tab", { name: /QQ Mail/i }).click();
+    await page.getByRole("tab", { name: /^QQ,/i }).click();
     await page.getByRole("tab", { name: "Timetable" }).click();
     const schedule = page.getByRole("region", { name: "Mail timetable" });
     await expect(schedule).toBeVisible();
     await expect(schedule.getByRole("button", { name: "日" })).toBeVisible();
     await expect(schedule.getByRole("button", { name: "周" })).toBeVisible();
     await expect(schedule.getByRole("button", { name: "月" })).toBeVisible();
-    await expect(schedule.getByText(/QQ Mail \/ Sun, Jun 21/)).toBeVisible();
+    await expect(schedule.getByText(/QQ \/ Sun, Jun 21/)).toBeVisible();
     await expect(schedule.getByText("IMAP/SMTP authorization code refreshed")).toBeVisible();
     await expect(schedule.getByText("QQ work label audit")).toHaveCount(0);
     await expect(schedule.getByText("Dinner with Kai")).toHaveCount(0);
@@ -147,7 +154,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await expect(
       page.getByRole("heading", { name: "IMAP/SMTP authorization code refreshed" })
     ).toBeVisible();
-    await expect(page.getByText(/QQ \/ QQ Mail \/ connected/i)).toBeVisible();
+    await expect(page.getByText(/QQ \/ QQ \/ connected/i)).toBeVisible();
 
     await page.getByRole("tab", { name: /All mailboxes/i }).click();
     const search = page.getByPlaceholder("Search sender, subject, tag:security, provider:qq");
@@ -161,8 +168,30 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await search.fill("");
 
     await page.getByRole("tab", { name: "Settings" }).click();
+    await page.route("https://api.github.com/repos/neko233-com/MailGUI233/releases/latest", async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          tag_name: "v9.9.9",
+          html_url: "https://github.com/neko233-com/MailGUI233/releases/tag/v9.9.9",
+          assets: [
+            {
+              name: "MailGUI233_9.9.9_x64-setup.exe",
+              browser_download_url: "https://example.com/MailGUI233_9.9.9_x64-setup.exe"
+            }
+          ]
+        })
+      });
+    });
     const settings = page.getByRole("region", { name: "System settings" });
     await expect(settings).toBeVisible();
+    await expect(settings.getByText("Current version 0.1.10")).toBeVisible();
+    await settings.getByRole("button", { name: "Check updates" }).click();
+    await expect(settings.getByText("Version 9.9.9 is available.")).toBeVisible();
+    await expect(settings.getByRole("button", { name: "Download update" })).toBeVisible();
+    await settings.getByLabel("Automatically check for updates").check();
+    await settings.getByLabel("Launch at startup").check();
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mailgui233.autoStart"))).toBe("true");
     await expect(settings.getByRole("tab", { name: /Git repository/i })).toBeVisible();
     await expect(settings.getByRole("tab", { name: /WebDAV/i })).toBeVisible();
     await expect(settings.getByText("Git repository is ready for native sync validation.")).toBeVisible();

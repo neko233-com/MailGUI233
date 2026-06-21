@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useI18n } from "../i18n";
+import { providerDisplayName } from "../lib/displayNames";
 import type { Account, ConnectionStatus, ProviderDefinition, ProviderScope } from "../types";
 
 interface ChannelPanelProps {
@@ -68,7 +69,7 @@ export function ChannelPanel({
   onProviderChange,
   onVerifyAll
 }: ChannelPanelProps) {
-  const { locale, t } = useI18n();
+  const { locale, resolvedLanguage, t } = useI18n();
   const connectedCount = accounts.filter((account) => account.status === "connected").length;
   const needsAuthCount = accounts.filter((account) => account.status === "needs-auth").length;
   const providerCount = providers.length;
@@ -126,11 +127,12 @@ export function ChannelPanel({
           const StatusIcon = statusIcon[status];
           const linkedAccounts = accounts.filter((account) => account.provider === provider.id);
           const isActive = activeProviderId === provider.id;
+          const displayName = providerDisplayName(provider, resolvedLanguage);
 
           return (
             <button
               key={provider.id}
-              aria-label={`${provider.shortName} channel ${statusCopy[status]}`}
+              aria-label={`${displayName} channel ${statusCopy[status]}`}
               className={`channel-card status-${status} ${isActive ? "is-active" : ""}`}
               onClick={() => onProviderChange(provider.id)}
               style={{ "--provider-accent": provider.accent } as CSSProperties}
@@ -144,7 +146,7 @@ export function ChannelPanel({
                 </span>
               </span>
 
-              <strong>{provider.shortName}</strong>
+              <strong>{displayName}</strong>
               <span className="channel-detail">{provider.capabilitySummary}</span>
 
               <span className="channel-meta-row">

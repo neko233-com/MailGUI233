@@ -31,7 +31,7 @@ export function MessageList({ accounts, messages, selectedId, onSelect }: Messag
         {messages.length === 0 ? (
           <div className="empty-state">
             <strong>{t("noMessages")}</strong>
-            <span>{t("searchEmpty")}</span>
+            <span>{accounts.length === 0 ? t("noAccountsHint") : t("searchEmpty")}</span>
           </div>
         ) : null}
 

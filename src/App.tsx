@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Archive, MailPlus, RefreshCcw, Trash2 } from "lucide-react";
-import { accounts, calendarEvents, folders, initialMessages, providerCatalog } from "./data/mail";
+import { accounts as demoAccounts, calendarEvents as demoCalendarEvents, folders, initialMessages, providerCatalog } from "./data/mail";
 import { initialCloudSyncConfigs } from "./lib/cloudSyncStrategies";
+import { accountDisplayName, providerDisplayName } from "./lib/displayNames";
 import { createSentMessage, filterMessages } from "./lib/mailActions";
 import type {
   Account,
@@ -12,6 +13,7 @@ import type {
   FolderId,
   MailboxTabId,
   MailMessage,
+  AccountProvider,
   ProviderScope
 } from "./types";
 import { ChannelPanel } from "./components/ChannelPanel";
@@ -54,14 +56,70 @@ async function getDesktopPlatform() {
   return "browser";
 }
 
+function demoDataEnabled() {
+  const isBrowserPreview = window.location.protocol === "http:" || window.location.protocol === "https:";
+
+  return import.meta.env.DEV || (isBrowserPreview && window.localStorage.getItem("mailgui233.demoData") === "true");
+}
+
+const accountsStorageKey = "mailgui233.accounts";
+
+function readStoredAccounts() {
+  try {
+    const stored = window.localStorage.getItem(accountsStorageKey);
+    return stored ? (JSON.parse(stored) as Account[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function providerFromAddress(address: string): AccountProvider {
+  const domain = address.split("@")[1]?.toLowerCase() ?? "";
+
+  if (domain === "qq.com" || domain === "foxmail.com") return "qq";
+  if (domain === "gmail.com" || domain === "googlemail.com") return "gmail";
+  if (["outlook.com", "hotmail.com", "live.com"].includes(domain)) return "outlook";
+  if (["icloud.com", "me.com", "mac.com"].includes(domain)) return "icloud";
+  if (["163.com", "126.com", "yeah.net"].includes(domain)) return "netease";
+  if (["proton.me", "protonmail.com"].includes(domain)) return "proton";
+  if (domain === "zoho.com") return "zoho";
+  if (["yahoo.com", "ymail.com", "aol.com"].includes(domain)) return "yahoo";
+
+  return "imap";
+}
+
+function createAccount(address: string): Account {
+  const provider = providerFromAddress(address);
+  const providerDefinition = providerCatalog.find((item) => item.id === provider) ?? providerCatalog.at(-1)!;
+  const localPart = address.split("@")[0] || address;
+
+  return {
+    id: `${provider}-${Date.now()}`,
+    name: provider === "qq" ? "QQ Mail" : providerDefinition.shortName === "IMAP" ? localPart : providerDefinition.shortName,
+    address,
+    provider,
+    accent: providerDefinition.accent,
+    unread: 0,
+    status: "needs-auth",
+    auth: providerDefinition.auth,
+    incoming: providerDefinition.incoming,
+    outgoing: providerDefinition.outgoing,
+    lastSync: new Date().toISOString(),
+    capabilities: providerDefinition.capabilities
+  };
+}
+
 function App() {
-  const { t } = useI18n();
-  const [messages, setMessages] = useState<MailMessage[]>(initialMessages);
+  const { resolvedLanguage, t } = useI18n();
+  const useDemoData = demoDataEnabled();
+  const [appAccounts, setAppAccounts] = useState<Account[]>(() => (useDemoData ? demoAccounts : readStoredAccounts()));
+  const appEvents = useMemo(() => (useDemoData ? demoCalendarEvents : []), [useDemoData]);
+  const [messages, setMessages] = useState<MailMessage[]>(() => (useDemoData ? initialMessages : []));
   const [activeAccountId, setActiveAccountId] = useState<AccountScope>("all");
   const [activeProviderId, setActiveProviderId] = useState<ProviderScope>("all");
   const [activeTab, setActiveTab] = useState<MailboxTabId>("inbox");
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string | undefined>(initialMessages[0].id);
+  const [selectedId, setSelectedId] = useState<string | undefined>(() => (useDemoData ? initialMessages[0]?.id : undefined));
   const [composerOpen, setComposerOpen] = useState(false);
   const [draft, setDraft] = useState<DraftMessage>(emptyDraft);
   const [syncing, setSyncing] = useState(false);
@@ -74,8 +132,8 @@ function App() {
   const isMailTab = isFolderTab(activeTab);
 
   const filteredMessages = useMemo(
-    () => filterMessages(messages, activeFolder, activeAccountId, query, accounts, activeProviderId),
-    [activeAccountId, activeFolder, activeProviderId, messages, query]
+    () => filterMessages(messages, activeFolder, activeAccountId, query, appAccounts, activeProviderId),
+    [activeAccountId, activeFolder, activeProviderId, appAccounts, messages, query]
   );
 
   const selectedMessage = useMemo(
@@ -83,7 +141,7 @@ function App() {
     [filteredMessages, selectedId]
   );
 
-  const accountById = useMemo(() => new Map(accounts.map((account) => [account.id, account])), []);
+  const accountById = useMemo(() => new Map(appAccounts.map((account) => [account.id, account])), [appAccounts]);
   const activeAccount = activeAccountId === "all" ? undefined : accountById.get(activeAccountId);
   const activeProvider =
     activeProviderId === "all"
@@ -107,18 +165,28 @@ function App() {
         : activeTab === "settings"
           ? t("settings")
           : activeFolderLabel;
-  const title = activeAccount?.name ?? activeProvider?.name ?? t("allMailboxes");
+  const title = activeAccount
+    ? accountDisplayName(activeAccount, resolvedLanguage)
+    : activeProvider
+      ? providerDisplayName(activeProvider, resolvedLanguage)
+      : t("allMailboxes");
   const subtitle =
     activeTab === "channels"
       ? "Verify Gmail, QQ, Outlook, iCloud, NetEase, Proton, and custom IMAP"
       : activeTab === "settings"
         ? t("cloudSyncIntro")
       : `${activeViewLabel} / ${activeAccount?.address ?? activeProvider?.capabilitySummary ?? "all providers"}`;
-  const scopeLabel = activeAccount?.address ?? activeProvider?.shortName ?? t("allMailboxes");
+  const scopeLabel = activeAccount?.address ?? (activeProvider ? providerDisplayName(activeProvider, resolvedLanguage) : t("allMailboxes"));
 
   useEffect(() => {
     getDesktopPlatform().then((value) => setPlatform(value));
   }, []);
+
+  useEffect(() => {
+    if (!useDemoData) {
+      window.localStorage.setItem(accountsStorageKey, JSON.stringify(appAccounts));
+    }
+  }, [appAccounts, useDemoData]);
 
   useEffect(() => {
     if (filteredMessages.length === 0) {
@@ -183,6 +251,32 @@ function App() {
     setActiveTab("inbox");
   }
 
+  function addAccount() {
+    const address = window.prompt(t("addMailboxPrompt"));
+    const normalized = address?.trim().toLowerCase();
+
+    if (!normalized || !normalized.includes("@")) {
+      return;
+    }
+
+    const account = createAccount(normalized);
+    setAppAccounts((current) => [account, ...current]);
+    setActiveAccountId(account.id);
+    setActiveProviderId("all");
+    setActiveTab("inbox");
+  }
+
+  function deleteActiveAccount() {
+    if (activeAccountId === "all") {
+      return;
+    }
+
+    setAppAccounts((current) => current.filter((account) => account.id !== activeAccountId));
+    setMessages((current) => current.filter((message) => message.accountId !== activeAccountId));
+    setActiveAccountId("all");
+    setSelectedId(undefined);
+  }
+
   function startReply(message: MailMessage) {
     setDraft({
       id: `reply-${message.id}`,
@@ -201,18 +295,22 @@ function App() {
 
     if (activeProvider) {
       return (
-        accounts.find(
+        appAccounts.find(
           (account) => account.provider === activeProvider.id && account.status === "connected"
         ) ??
-        accounts.find((account) => account.provider === activeProvider.id) ??
-        accounts[0]
+        appAccounts.find((account) => account.provider === activeProvider.id) ??
+        appAccounts[0]
       );
     }
 
-    return accounts.find((account) => account.status === "connected") ?? accounts[0];
+    return appAccounts.find((account) => account.status === "connected") ?? appAccounts[0];
   }
 
   function sendDraft() {
+    if (appAccounts.length === 0) {
+      return;
+    }
+
     const sent = createSentMessage(draft, resolveSendAccount());
     setMessages((current) => [sent, ...current]);
     setSelectedId(sent.id);
@@ -226,13 +324,15 @@ function App() {
       <ShaderBackdrop />
 
       <Sidebar
-        accounts={accounts}
+        accounts={appAccounts}
         folders={folders}
         activeAccountId={activeAccountId}
         activeTab={activeTab}
         messages={messages}
         onAccountChange={changeAccount}
         onTabChange={setActiveTab}
+        onAccountAdd={addAccount}
+        onAccountDelete={deleteActiveAccount}
       />
 
       <section className="mail-workspace" aria-label="Mail workspace">
@@ -243,7 +343,7 @@ function App() {
           syncing={syncing}
           onQueryChange={setQuery}
           actions={[
-            { label: t("compose"), icon: MailPlus, onClick: () => setComposerOpen(true), tone: "primary" },
+            { label: t("compose"), icon: MailPlus, onClick: () => setComposerOpen(true), disabled: appAccounts.length === 0, tone: "primary" },
             { label: t("refresh"), icon: RefreshCcw, onClick: refreshMail },
             ...(isMailTab
               ? [
@@ -257,7 +357,7 @@ function App() {
         {activeTab === "channels" ? (
           <div className="channel-workspace">
             <ChannelPanel
-              accounts={accounts}
+              accounts={appAccounts}
               providers={providerCatalog}
               activeProviderId={activeProviderId}
               verifying={verifyingChannels}
@@ -273,15 +373,15 @@ function App() {
             <SchedulePanel
               activeAccountId={activeAccountId}
               activeProviderId={activeProviderId}
-              accounts={accounts}
+              accounts={appAccounts}
               messages={messages}
-              events={calendarEvents}
+              events={appEvents}
             />
           </div>
         ) : (
           <div className="content-grid">
             <MessageList
-              accounts={accounts}
+              accounts={appAccounts}
               messages={filteredMessages}
               selectedId={selectedMessage?.id}
               onSelect={selectMessage}
@@ -304,7 +404,7 @@ function App() {
 
         <StatusBar
           platform={platform}
-          accounts={accounts}
+          accounts={appAccounts}
           scopeLabel={scopeLabel}
           messageCount={filteredMessages.length}
           syncing={syncing}

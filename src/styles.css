@@ -112,11 +112,60 @@ button {
 
 .mailbox-column {
   display: grid;
-  grid-template-rows: 76px minmax(0, 1fr);
+  grid-template-rows: 76px auto minmax(0, 1fr);
   gap: 6px;
   padding: 14px 10px 12px 14px;
   border-right: 1px solid var(--line);
   background: rgb(246 250 252 / 50%);
+}
+
+.mailbox-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px 34px;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+
+.mailbox-search,
+.mailbox-tools button {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 64%);
+  color: var(--muted);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 74%);
+}
+
+.mailbox-search {
+  gap: 7px;
+  min-width: 0;
+  padding: 0 9px;
+}
+
+.mailbox-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.mailbox-tools button {
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mailbox-tools button:hover {
+  background: #ffffff;
+}
+
+.mailbox-tools button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 
 .mailbox-brand {
@@ -1315,12 +1364,103 @@ button {
 }
 
 .cloud-sync-tabs,
-.cloud-sync-card {
+.cloud-sync-card,
+.app-settings-card {
   border: 1px solid rgb(255 255 255 / 74%);
   border-radius: 8px;
   background: rgb(255 255 255 / 74%);
   backdrop-filter: blur(22px) saturate(122%);
   box-shadow: var(--shadow-soft);
+}
+
+.app-settings-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.app-settings-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-settings-head strong {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 780;
+}
+
+.app-settings-head p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.settings-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: rgb(247 250 252 / 82%);
+}
+
+.settings-toggle input {
+  accent-color: var(--accent);
+}
+
+.settings-toggle span,
+.update-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.settings-toggle span {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 720;
+}
+
+.update-status {
+  justify-content: space-between;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--accent-soft);
+  color: #08736f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.update-status span {
+  flex: 1;
+}
+
+.update-status button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, #ffffff);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: rgb(255 255 255 / 72%);
+  color: #08736f;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 760;
+  white-space: nowrap;
 }
 
 .cloud-sync-tabs {
@@ -1633,7 +1773,7 @@ button {
   }
 
   .mailbox-column {
-    grid-template-rows: 50px minmax(0, 1fr);
+    grid-template-rows: 50px auto minmax(0, 1fr);
   }
 
   .function-header {
@@ -1757,8 +1897,15 @@ button {
   }
 
   .cloud-sync-card-head,
-  .cloud-sync-form {
+  .cloud-sync-form,
+  .app-settings-head,
+  .settings-toggle-grid {
     grid-template-columns: 1fr;
+  }
+
+  .update-status {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .channel-filter-clear,
