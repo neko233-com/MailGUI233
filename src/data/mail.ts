@@ -150,6 +150,20 @@ export const accounts: Account[] = [
     capabilities: ["imap", "smtp", "folders", "attachments"]
   },
   {
+    id: "qq-work",
+    name: "QQ Work",
+    address: "work233@qq.com",
+    provider: "qq",
+    accent: "#38bdf8",
+    unread: 3,
+    status: "connected",
+    auth: "Authorization code",
+    incoming: "imap.qq.com:993",
+    outgoing: "smtp.qq.com:465",
+    lastSync: "2026-06-21T14:47:00+08:00",
+    capabilities: ["imap", "smtp", "folders", "attachments"]
+  },
+  {
     id: "outlook-studio",
     name: "Studio Outlook",
     address: "desk@neko233.com",
@@ -253,6 +267,16 @@ export const calendarEvents: CalendarEvent[] = [
   },
   {
     id: "cal-003",
+    accountId: "qq-work",
+    title: "QQ work label audit",
+    startsAt: "2026-06-21T14:00:00+08:00",
+    endsAt: "2026-06-21T14:35:00+08:00",
+    location: "QQ Work mailbox",
+    notes: "Confirm tags, aliases, and multiple QQ account routing.",
+    source: "mail"
+  },
+  {
+    id: "cal-004",
     accountId: "gmail-personal",
     title: "Dinner with Kai",
     startsAt: "2026-06-21T19:00:00+08:00",
@@ -261,7 +285,7 @@ export const calendarEvents: CalendarEvent[] = [
     source: "mail"
   },
   {
-    id: "cal-004",
+    id: "cal-005",
     accountId: "icloud-family",
     title: "Create iCloud app password",
     startsAt: "2026-06-22T10:00:00+08:00",
@@ -271,7 +295,7 @@ export const calendarEvents: CalendarEvent[] = [
     source: "provider"
   },
   {
-    id: "cal-005",
+    id: "cal-006",
     accountId: "netease-backup",
     title: "NetEase folder audit",
     startsAt: "2026-06-24T14:00:00+08:00",
@@ -280,7 +304,7 @@ export const calendarEvents: CalendarEvent[] = [
     source: "provider"
   },
   {
-    id: "cal-006",
+    id: "cal-007",
     accountId: "proton-secure",
     title: "Start Proton Bridge",
     startsAt: "2026-06-26T16:00:00+08:00",
@@ -290,7 +314,7 @@ export const calendarEvents: CalendarEvent[] = [
     source: "calendar"
   },
   {
-    id: "cal-007",
+    id: "cal-008",
     accountId: "custom-imap",
     title: "IMAP certificate review",
     startsAt: "2026-06-28T13:30:00+08:00",
@@ -371,6 +395,23 @@ export const initialMessages: MailMessage[] = [
   },
   {
     id: "m-005",
+    accountId: "qq-work",
+    folder: "inbox",
+    from: { name: "QQ Team", address: "team@qq.com" },
+    to: [{ name: "Work", address: "work233@qq.com" }],
+    subject: "Work QQ labels indexed for project mail",
+    preview: "Labels for project, sync, and vendor mail are ready for searchable routing.",
+    body:
+      "The work QQ mailbox has separate label routing for project mail, sync status, and vendor notifications. Search examples: tag:project provider:qq account:work233@qq.com.",
+    timestamp: "2026-06-21T13:46:00+08:00",
+    unread: true,
+    starred: false,
+    labels: ["qq", "project", "sync", "work"],
+    attachments: ["label-map.csv"],
+    priority: "normal"
+  },
+  {
+    id: "m-006",
     accountId: "netease-backup",
     folder: "inbox",
     from: { name: "NetEase Mail", address: "notice@mail.163.com" },
@@ -387,7 +428,7 @@ export const initialMessages: MailMessage[] = [
     priority: "normal"
   },
   {
-    id: "m-006",
+    id: "m-007",
     accountId: "gmail-personal",
     folder: "inbox",
     from: { name: "Lin Studio", address: "hello@linstudio.design" },
@@ -404,7 +445,7 @@ export const initialMessages: MailMessage[] = [
     priority: "normal"
   },
   {
-    id: "m-007",
+    id: "m-008",
     accountId: "icloud-family",
     folder: "inbox",
     from: { name: "Apple ID", address: "appleid@id.apple.com" },
@@ -421,7 +462,7 @@ export const initialMessages: MailMessage[] = [
     priority: "normal"
   },
   {
-    id: "m-008",
+    id: "m-009",
     accountId: "proton-secure",
     folder: "inbox",
     from: { name: "Proton Bridge", address: "bridge@proton.me" },
@@ -438,7 +479,7 @@ export const initialMessages: MailMessage[] = [
     priority: "low"
   },
   {
-    id: "m-009",
+    id: "m-010",
     accountId: "custom-imap",
     folder: "inbox",
     from: { name: "Ops Mailhost", address: "postmaster@example.org" },
@@ -455,7 +496,7 @@ export const initialMessages: MailMessage[] = [
     priority: "normal"
   },
   {
-    id: "m-010",
+    id: "m-011",
     accountId: "qq-main",
     folder: "sent",
     from: { name: "Neko", address: "14170@qq.com" },
@@ -472,7 +513,7 @@ export const initialMessages: MailMessage[] = [
     priority: "low"
   },
   {
-    id: "m-011",
+    id: "m-012",
     accountId: "outlook-studio",
     folder: "archive",
     from: { name: "Ops Team", address: "ops@neko233.com" },

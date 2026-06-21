@@ -80,6 +80,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
 
     await expect(page.getByRole("tab", { name: /Personal Gmail/i })).toBeInViewport();
     await expect(page.getByRole("tab", { name: /QQ Mail/i })).toBeInViewport();
+    await expect(page.getByRole("tab", { name: /QQ Work/i })).toBeInViewport();
     await expect(page.getByRole("tab", { name: /Studio Outlook/i })).toBeInViewport();
     await expect(page.getByRole("tab", { name: /iCloud/i })).toBeInViewport();
     await expect(page.getByRole("tab", { name: /NetEase 163/i })).toBeInViewport();
@@ -94,7 +95,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await page.getByLabel("Language").selectOption("zh");
     await expect(page.getByRole("tab", { name: /所有邮箱/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: "收件箱" })).toBeVisible();
-    await expect(page.getByPlaceholder("搜索发件人、主题、标签")).toBeVisible();
+    await expect(page.getByPlaceholder("搜索发件人、主题、tag:安全、provider:qq")).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mailgui233.language"))).toBe("zh");
     await page.getByLabel("语言").selectOption("en");
@@ -109,6 +110,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await expect(schedule.getByRole("button", { name: "月" })).toBeVisible();
     await expect(schedule.getByText(/QQ Mail \/ Sun, Jun 21/)).toBeVisible();
     await expect(schedule.getByText("IMAP/SMTP authorization code refreshed")).toBeVisible();
+    await expect(schedule.getByText("QQ work label audit")).toHaveCount(0);
     await expect(schedule.getByText("Dinner with Kai")).toHaveCount(0);
 
     await page.screenshot({
@@ -119,6 +121,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await page.getByRole("tab", { name: /All mailboxes/i }).click();
     await schedule.getByRole("button", { name: "周" }).click();
     await expect(schedule.getByText("Release sync")).toBeVisible();
+    await expect(schedule.getByText("QQ work label audit")).toBeVisible();
     await schedule.getByRole("button", { name: "月" }).click();
     await expect(schedule.getByText("June 2026")).toBeVisible();
     await expect(schedule.getByText("IMAP certificate review")).toBeVisible();
@@ -147,9 +150,35 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await expect(page.getByText(/QQ \/ QQ Mail \/ connected/i)).toBeVisible();
 
     await page.getByRole("tab", { name: /All mailboxes/i }).click();
-    await page.getByPlaceholder("Search sender, subject, labels").fill("bridge");
+    const search = page.getByPlaceholder("Search sender, subject, tag:security, provider:qq");
+    await search.fill("tag:security provider:qq is:starred");
+    await expect(page.getByRole("heading", { name: "IMAP/SMTP authorization code refreshed" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Work QQ labels indexed for project mail" })).toHaveCount(0);
+    await search.fill("tag:project provider:qq account:work233 has:attachment");
+    await expect(page.getByRole("heading", { name: "Work QQ labels indexed for project mail" })).toBeVisible();
+    await search.fill("bridge");
     await expect(page.getByRole("heading", { name: "Bridge offline: local sync paused" })).toBeVisible();
-    await page.getByPlaceholder("Search sender, subject, labels").fill("");
+    await search.fill("");
+
+    await page.getByRole("tab", { name: "Settings" }).click();
+    const settings = page.getByRole("region", { name: "System settings" });
+    await expect(settings).toBeVisible();
+    await expect(settings.getByRole("tab", { name: /Git repository/i })).toBeVisible();
+    await expect(settings.getByRole("tab", { name: /WebDAV/i })).toBeVisible();
+    await expect(settings.getByText("Git repository is ready for native sync validation.")).toBeVisible();
+    await settings.getByRole("tab", { name: /WebDAV/i }).click();
+    await expect(settings.getByText("Disabled until the user enables this sync method.")).toBeVisible();
+    await settings.getByLabel("Enabled").check();
+    await expect(settings.getByText("Missing 3 required fields.")).toBeVisible();
+    await settings.getByLabel("Endpoint").fill("https://dav.example.com/mailgui233/");
+    await settings.getByLabel("Username").fill("neko233");
+    await settings.getByLabel("Password key").fill("keychain:webdav-mailgui233");
+    await expect(settings.getByText("WebDAV is ready for native sync validation.")).toBeVisible();
+
+    await page.screenshot({
+      path: testInfo.outputPath("desktop-cloud-sync-settings.png"),
+      fullPage: false
+    });
 
     await page.getByRole("button", { name: /Compose/i }).click();
     const composer = page.getByRole("region", { name: "Compose" });
@@ -188,6 +217,17 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await expect(page.getByRole("region", { name: "Channel validation" })).toBeVisible();
     await page.getByRole("button", { name: /Verify all/i }).click();
     await expect(page.getByRole("button", { name: /Verifying/i })).toBeVisible();
+
+    await page.getByRole("tab", { name: "Settings" }).click();
+    const settings = page.getByRole("region", { name: "System settings" });
+    await expect(settings.getByRole("tab", { name: /Git repository/i })).toBeVisible();
+    await settings.getByRole("tab", { name: /Local folder/i }).click();
+    await expect(settings.getByText("Disabled until the user enables this sync method.")).toBeVisible();
+    await settings.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: testInfo.outputPath("mobile-cloud-sync-settings.png"),
+      fullPage: false
+    });
 
     await page.getByRole("tab", { name: "Starred" }).click();
     await expect(

@@ -19,6 +19,8 @@ jobs:
     env:
       npm_config_audit: "false"
       npm_config_fund: "false"
+      CARGO_INCREMENTAL: "0"
+      RUSTFLAGS: "-C debuginfo=0"
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +48,7 @@ jobs:
           workspaces: src-tauri -> target
 
       - name: Install
-        run: npm ci --prefer-offline
+        run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Package and publish desktop app
         uses: tauri-apps/tauri-action@v0

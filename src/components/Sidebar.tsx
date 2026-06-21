@@ -5,12 +5,14 @@ import {
   Inbox,
   Send,
   Settings,
+  SlidersHorizontal,
   Star,
   Trash2
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
 import { useI18n } from "../i18n";
+import { LogoMark } from "./LogoMark";
 import type { Account, AccountScope, Folder, FolderId, MailboxTabId, MailMessage } from "../types";
 
 const tabIcons: Record<MailboxTabId, LucideIcon> = {
@@ -21,16 +23,28 @@ const tabIcons: Record<MailboxTabId, LucideIcon> = {
   drafts: FileText,
   archive: Archive,
   trash: Trash2,
-  channels: Settings
+  channels: Settings,
+  settings: SlidersHorizontal
 };
 
-const primaryTabs: MailboxTabId[] = ["inbox", "timetable", "starred", "sent", "drafts", "archive", "trash", "channels"];
+const primaryTabs: MailboxTabId[] = [
+  "inbox",
+  "timetable",
+  "starred",
+  "sent",
+  "drafts",
+  "archive",
+  "trash",
+  "channels",
+  "settings"
+];
 const tabLabels: Record<MailboxTabId, ReturnType<typeof labelKey>> = {
   archive: "archive",
   channels: "channels",
   drafts: "drafts",
   inbox: "inbox",
   sent: "sent",
+  settings: "settings",
   starred: "starred",
   timetable: "timetable",
   trash: "trash"
@@ -92,7 +106,8 @@ export function Sidebar({
     <aside className="sidebar" aria-label={t("mailNavigation")}>
       <section className="mailbox-column" aria-label={t("mailboxList")}>
         <div className="mailbox-brand" aria-hidden="true">
-          <span>M</span>
+          <LogoMark />
+          <span>Mail233</span>
         </div>
 
         <div className="account-tablist" role="tablist" aria-orientation="vertical" aria-label={t("mailboxList")}>

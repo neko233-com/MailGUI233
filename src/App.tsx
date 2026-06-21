@@ -1,13 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { Archive, MailPlus, RefreshCcw, Trash2 } from "lucide-react";
 import { accounts, calendarEvents, folders, initialMessages, providerCatalog } from "./data/mail";
+import { initialCloudSyncConfigs } from "./lib/cloudSyncStrategies";
 import { createSentMessage, filterMessages } from "./lib/mailActions";
-import type { Account, AccountScope, DraftMessage, FolderId, MailboxTabId, MailMessage, ProviderScope } from "./types";
+import type {
+  Account,
+  AccountScope,
+  CloudSyncConfig,
+  CloudSyncStrategyId,
+  DraftMessage,
+  FolderId,
+  MailboxTabId,
+  MailMessage,
+  ProviderScope
+} from "./types";
 import { ChannelPanel } from "./components/ChannelPanel";
 import { Composer } from "./components/Composer";
 import { MessageList } from "./components/MessageList";
 import { MessageReader } from "./components/MessageReader";
 import { SchedulePanel } from "./components/SchedulePanel";
+import { SettingsPanel } from "./components/SettingsPanel";
 import { ShaderBackdrop } from "./components/ShaderBackdrop";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
@@ -53,6 +65,8 @@ function App() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [draft, setDraft] = useState<DraftMessage>(emptyDraft);
   const [syncing, setSyncing] = useState(false);
+  const [cloudSyncConfigs, setCloudSyncConfigs] =
+    useState<Record<CloudSyncStrategyId, CloudSyncConfig>>(initialCloudSyncConfigs);
   const [verifyingChannels, setVerifyingChannels] = useState(false);
   const [lastChannelCheck, setLastChannelCheck] = useState<string | null>(null);
   const [platform, setPlatform] = useState("browser");
@@ -86,11 +100,19 @@ function App() {
   };
   const activeFolderLabel = folderLabelById[activeFolder] ?? t("inbox");
   const activeViewLabel =
-    activeTab === "timetable" ? t("timetable") : activeTab === "channels" ? t("channels") : activeFolderLabel;
+    activeTab === "timetable"
+      ? t("timetable")
+      : activeTab === "channels"
+        ? t("channels")
+        : activeTab === "settings"
+          ? t("settings")
+          : activeFolderLabel;
   const title = activeAccount?.name ?? activeProvider?.name ?? t("allMailboxes");
   const subtitle =
     activeTab === "channels"
       ? "Verify Gmail, QQ, Outlook, iCloud, NetEase, Proton, and custom IMAP"
+      : activeTab === "settings"
+        ? t("cloudSyncIntro")
       : `${activeViewLabel} / ${activeAccount?.address ?? activeProvider?.capabilitySummary ?? "all providers"}`;
   const scopeLabel = activeAccount?.address ?? activeProvider?.shortName ?? t("allMailboxes");
 
@@ -140,6 +162,13 @@ function App() {
       setVerifyingChannels(false);
       setSyncing(false);
     }, 900);
+  }
+
+  function changeCloudSyncConfig(strategyId: CloudSyncStrategyId, config: CloudSyncConfig) {
+    setCloudSyncConfigs((current) => ({
+      ...current,
+      [strategyId]: config
+    }));
   }
 
   function changeAccount(accountId: AccountScope) {
@@ -237,6 +266,8 @@ function App() {
               onVerifyAll={verifyAllChannels}
             />
           </div>
+        ) : activeTab === "settings" ? (
+          <SettingsPanel configs={cloudSyncConfigs} onConfigChange={changeCloudSyncConfig} />
         ) : activeTab === "timetable" ? (
           <div className="timetable-layout">
             <SchedulePanel

@@ -1,6 +1,6 @@
 export type FolderId = "inbox" | "starred" | "sent" | "drafts" | "archive" | "trash";
 
-export type MailboxTabId = FolderId | "timetable" | "channels";
+export type MailboxTabId = FolderId | "timetable" | "channels" | "settings";
 
 export type AccountProvider =
   | "gmail"
@@ -22,6 +22,12 @@ export type ScheduleViewMode = "day" | "week" | "month";
 export type Priority = "normal" | "high" | "low";
 
 export type ConnectionStatus = "connected" | "needs-auth" | "syncing" | "offline";
+
+export type CloudSyncStrategyId = "git" | "webdav" | "local";
+
+export type CloudSyncStatus = "ready" | "needs-config" | "checking";
+
+export type CloudSyncFieldKind = "text" | "password" | "select";
 
 export type MailCapability =
   | "oauth"
@@ -65,6 +71,37 @@ export interface ProviderDefinition {
   capabilitySummary: string;
   setupNote: string;
   capabilities: MailCapability[];
+}
+
+export interface CloudSyncField {
+  key: string;
+  label: string;
+  kind: CloudSyncFieldKind;
+  placeholder?: string;
+  options?: string[];
+  required?: boolean;
+}
+
+export interface CloudSyncConfig {
+  strategyId: CloudSyncStrategyId;
+  enabled: boolean;
+  values: Record<string, string>;
+}
+
+export interface CloudSyncValidation {
+  ok: boolean;
+  status: CloudSyncStatus;
+  message: string;
+  missingFields: string[];
+}
+
+export interface CloudSyncStrategyDefinition {
+  id: CloudSyncStrategyId;
+  name: string;
+  summary: string;
+  privacyNote: string;
+  accent: string;
+  fields: CloudSyncField[];
 }
 
 export interface Contact {
