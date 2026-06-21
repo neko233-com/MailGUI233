@@ -65,6 +65,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await page.goto("/");
     await expect(page).toHaveTitle("MailGUI233");
     await expectMaterialShader(page);
+    await expect(page.getByTestId("app-titlebar")).toBeVisible();
     await expect(page.getByRole("complementary", { name: "Mail navigation" })).toBeVisible();
     await expect(page.getByRole("tab", { name: /All mailboxes/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Inbox" })).toBeVisible();
@@ -133,6 +134,31 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await expect(schedule.getByText("June 2026")).toBeVisible();
     await expect(schedule.getByText("IMAP certificate review")).toBeVisible();
 
+    await schedule.getByRole("button", { name: "New item" }).click();
+    const scheduleEditor = page.getByRole("form", { name: "New item" });
+    await scheduleEditor.getByLabel("Title").fill("Visual QA calendar item");
+    await scheduleEditor.getByLabel("Date").fill("2026-06-23");
+    await scheduleEditor.getByLabel("Start").fill("10:00");
+    await scheduleEditor.getByLabel("End").fill("10:30");
+    await scheduleEditor.getByLabel("Location").fill("QA room");
+    await scheduleEditor.getByRole("button", { name: "Save" }).click();
+    const createdScheduleItem = schedule.getByRole("button", { name: /Visual QA calendar item schedule item/i });
+    await expect(createdScheduleItem).toBeVisible();
+
+    await createdScheduleItem.click({ button: "right" });
+    const scheduleMenu = page.getByRole("menu", { name: "Schedule item menu" });
+    await expect(scheduleMenu).toBeVisible();
+    await scheduleMenu.getByRole("menuitem", { name: "Edit item" }).click();
+    const editScheduleEditor = page.getByRole("form", { name: "Edit item" });
+    await editScheduleEditor.getByLabel("Title").fill("Visual QA calendar item edited");
+    await editScheduleEditor.getByRole("button", { name: "Save" }).click();
+    const editedScheduleItem = schedule.getByRole("button", { name: /Visual QA calendar item edited schedule item/i });
+    await expect(editedScheduleItem).toBeVisible();
+
+    await editedScheduleItem.click({ button: "right" });
+    await page.getByRole("menu", { name: "Schedule item menu" }).getByRole("menuitem", { name: "Delete item" }).click();
+    await expect(editedScheduleItem).toHaveCount(0);
+
     await page.screenshot({
       path: testInfo.outputPath("desktop-schedule-month.png"),
       fullPage: false
@@ -185,7 +211,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     });
     const settings = page.getByRole("region", { name: "System settings" });
     await expect(settings).toBeVisible();
-    await expect(settings.getByText("Current version 0.1.10")).toBeVisible();
+    await expect(settings.getByText("Current version 0.1.11")).toBeVisible();
     await settings.getByRole("button", { name: "Check updates" }).click();
     await expect(settings.getByText("Version 9.9.9 is available.")).toBeVisible();
     await expect(settings.getByRole("button", { name: "Download update" })).toBeVisible();

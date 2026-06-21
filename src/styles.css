@@ -55,13 +55,97 @@ button {
   border: 0;
 }
 
+.app-frame {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: 38px minmax(0, 1fr);
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #eef3f6;
+}
+
+.app-titlebar {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  height: 38px;
+  padding-left: 14px;
+  color: #162026;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 74%), rgb(239 246 248 / 60%)),
+    color-mix(in srgb, var(--accent) 4%, #eef3f6);
+  border-bottom: 1px solid rgb(31 42 52 / 9%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.titlebar-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 84%), rgb(213 244 242 / 76%)),
+    var(--accent-soft);
+  color: #0a7773;
+  font-size: 11px;
+  font-weight: 880;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 72%),
+    0 8px 18px rgb(12 111 106 / 12%);
+}
+
+.titlebar-brand strong {
+  overflow: hidden;
+  color: #111418;
+  font-size: 13px;
+  font-weight: 820;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.titlebar-controls {
+  display: inline-flex;
+  align-self: stretch;
+}
+
+.titlebar-controls button {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  color: #33404a;
+  background: transparent;
+  cursor: pointer;
+}
+
+.titlebar-controls button:hover {
+  background: rgb(255 255 255 / 58%);
+}
+
+.titlebar-controls button.is-close:hover {
+  color: #ffffff;
+  background: #e5484d;
+}
+
 .app-shell {
   position: relative;
   isolation: isolate;
   display: grid;
   grid-template-columns: 432px minmax(0, 1fr);
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   background:
     linear-gradient(180deg, rgb(250 252 253 / 78%), rgb(233 240 244 / 88%)),
@@ -865,7 +949,7 @@ button {
 
 .schedule-header {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) auto auto;
+  grid-template-columns: minmax(180px, 1fr) auto auto auto;
   align-items: center;
   gap: 10px;
   min-width: 0;
@@ -893,6 +977,29 @@ button {
 .schedule-title strong {
   color: var(--ink);
   font-weight: 760;
+}
+
+.schedule-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  border-radius: 8px;
+  padding: 0 11px;
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgb(30 169 163 / 92%), rgb(5 135 130 / 96%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 30%),
+    0 10px 22px rgb(9 119 115 / 18%);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.schedule-add-button:hover {
+  transform: translateY(-1px);
 }
 
 .schedule-nav,
@@ -1003,6 +1110,14 @@ button {
     color-mix(in srgb, var(--event-accent) 11%, #ffffff);
   color: var(--ink);
   box-shadow: 0 8px 18px rgb(20 35 48 / 7%);
+  cursor: pointer;
+  text-align: left;
+}
+
+.schedule-event:hover,
+.month-event:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.08);
 }
 
 .schedule-event strong {
@@ -1119,12 +1234,18 @@ button {
 }
 
 .month-event {
+  border: 0;
   border-radius: 999px;
   padding: 2px 7px;
   background: color-mix(in srgb, var(--event-accent) 14%, #ffffff);
   color: #1c2c32;
   font-size: 10px;
   font-weight: 760;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .month-event.item-mail {
@@ -1140,6 +1261,155 @@ button {
   font-size: 10px;
   font-style: normal;
   font-weight: 760;
+}
+
+.schedule-context-menu {
+  position: fixed;
+  z-index: 30;
+  display: grid;
+  min-width: 172px;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 10px;
+  padding: 6px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 92%), rgb(245 250 251 / 86%));
+  backdrop-filter: blur(24px) saturate(128%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 72%),
+    0 18px 40px rgb(20 35 48 / 16%);
+}
+
+.schedule-context-menu button {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  border-radius: 7px;
+  padding: 0 9px;
+  color: #24313a;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 760;
+  text-align: left;
+}
+
+.schedule-context-menu button:hover {
+  background: rgb(230 241 244 / 78%);
+}
+
+.schedule-context-menu button.danger {
+  color: #bb2d33;
+}
+
+.schedule-editor-backdrop {
+  position: fixed;
+  inset: 38px 0 0;
+  z-index: 28;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgb(232 240 244 / 28%);
+  backdrop-filter: blur(8px);
+}
+
+.schedule-editor {
+  display: grid;
+  gap: 14px;
+  width: min(520px, calc(100vw - 36px));
+  border: 1px solid rgb(255 255 255 / 78%);
+  border-radius: 12px;
+  padding: 16px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 94%), rgb(246 250 252 / 88%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 26px 70px rgb(20 35 48 / 18%);
+}
+
+.schedule-editor header,
+.schedule-editor footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.schedule-editor header strong {
+  font-size: 17px;
+  font-weight: 840;
+}
+
+.schedule-editor header button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: #41505b;
+  background: rgb(237 244 247 / 72%);
+  cursor: pointer;
+}
+
+.schedule-editor label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.schedule-editor label span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.schedule-editor input {
+  min-width: 0;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 11px;
+  color: var(--ink);
+  background: rgb(255 255 255 / 82%);
+  outline: none;
+}
+
+.schedule-editor input:focus {
+  border-color: color-mix(in srgb, var(--accent) 46%, #ffffff);
+  box-shadow: 0 0 0 3px rgb(11 143 138 / 12%);
+}
+
+.schedule-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr);
+  gap: 10px;
+}
+
+.schedule-editor footer {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.schedule-editor footer button {
+  min-width: 74px;
+  height: 36px;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #2c3942;
+  background: rgb(235 242 245 / 78%);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.schedule-editor footer .editor-save {
+  color: #ffffff;
+  background: linear-gradient(180deg, rgb(25 166 160 / 94%), rgb(5 133 128 / 96%));
+}
+
+.schedule-editor footer .editor-delete {
+  color: #bd2f35;
+  background: rgb(255 238 239 / 86%);
 }
 
 .channel-panel {
@@ -1851,9 +2121,18 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .schedule-add-button {
+    width: max-content;
+  }
+
   .schedule-nav,
   .schedule-tabs {
     width: max-content;
+  }
+
+  .schedule-editor-grid,
+  .schedule-editor footer {
+    grid-template-columns: 1fr;
   }
 
   .week-schedule {

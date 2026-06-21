@@ -7,6 +7,7 @@ import { createSentMessage, filterMessages } from "./lib/mailActions";
 import type {
   Account,
   AccountScope,
+  CalendarEvent,
   CloudSyncConfig,
   CloudSyncStrategyId,
   DraftMessage,
@@ -25,6 +26,7 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { ShaderBackdrop } from "./components/ShaderBackdrop";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
+import { TitleBar } from "./components/TitleBar";
 import { TopBar } from "./components/TopBar";
 import { useI18n } from "./i18n";
 
@@ -63,11 +65,21 @@ function demoDataEnabled() {
 }
 
 const accountsStorageKey = "mailgui233.accounts";
+const calendarEventsStorageKey = "mailgui233.calendarEvents";
 
 function readStoredAccounts() {
   try {
     const stored = window.localStorage.getItem(accountsStorageKey);
     return stored ? (JSON.parse(stored) as Account[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function readStoredCalendarEvents() {
+  try {
+    const stored = window.localStorage.getItem(calendarEventsStorageKey);
+    return stored ? (JSON.parse(stored) as CalendarEvent[]) : [];
   } catch {
     return [];
   }
@@ -113,7 +125,7 @@ function App() {
   const { resolvedLanguage, t } = useI18n();
   const useDemoData = demoDataEnabled();
   const [appAccounts, setAppAccounts] = useState<Account[]>(() => (useDemoData ? demoAccounts : readStoredAccounts()));
-  const appEvents = useMemo(() => (useDemoData ? demoCalendarEvents : []), [useDemoData]);
+  const [appEvents, setAppEvents] = useState<CalendarEvent[]>(() => (useDemoData ? demoCalendarEvents : readStoredCalendarEvents()));
   const [messages, setMessages] = useState<MailMessage[]>(() => (useDemoData ? initialMessages : []));
   const [activeAccountId, setActiveAccountId] = useState<AccountScope>("all");
   const [activeProviderId, setActiveProviderId] = useState<ProviderScope>("all");
@@ -189,6 +201,12 @@ function App() {
   }, [appAccounts, useDemoData]);
 
   useEffect(() => {
+    if (!useDemoData) {
+      window.localStorage.setItem(calendarEventsStorageKey, JSON.stringify(appEvents));
+    }
+  }, [appEvents, useDemoData]);
+
+  useEffect(() => {
     if (filteredMessages.length === 0) {
       setSelectedId(undefined);
       return;
@@ -203,6 +221,14 @@ function App() {
     setMessages((current) =>
       current.map((message) => (message.id === id ? { ...message, ...patch } : message))
     );
+  }
+
+  function deleteMessage(id: string) {
+    setMessages((current) => current.filter((message) => message.id !== id));
+
+    if (selectedId === id) {
+      setSelectedId(undefined);
+    }
   }
 
   function selectMessage(id: string) {
@@ -273,8 +299,23 @@ function App() {
 
     setAppAccounts((current) => current.filter((account) => account.id !== activeAccountId));
     setMessages((current) => current.filter((message) => message.accountId !== activeAccountId));
+    setAppEvents((current) => current.filter((event) => event.accountId !== activeAccountId));
     setActiveAccountId("all");
     setSelectedId(undefined);
+  }
+
+  function createCalendarEvent(event: CalendarEvent) {
+    setAppEvents((current) => [event, ...current]);
+  }
+
+  function updateCalendarEvent(nextEvent: CalendarEvent) {
+    setAppEvents((current) =>
+      current.map((event) => (event.id === nextEvent.id ? { ...event, ...nextEvent } : event))
+    );
+  }
+
+  function deleteCalendarEvent(eventId: string) {
+    setAppEvents((current) => current.filter((event) => event.id !== eventId));
   }
 
   function startReply(message: MailMessage) {
@@ -320,105 +361,113 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
-      <ShaderBackdrop />
+    <main className="app-frame">
+      <TitleBar />
+      <div className="app-shell">
+        <ShaderBackdrop />
 
-      <Sidebar
-        accounts={appAccounts}
-        folders={folders}
-        activeAccountId={activeAccountId}
-        activeTab={activeTab}
-        messages={messages}
-        onAccountChange={changeAccount}
-        onTabChange={setActiveTab}
-        onAccountAdd={addAccount}
-        onAccountDelete={deleteActiveAccount}
-      />
-
-      <section className="mail-workspace" aria-label="Mail workspace">
-        <TopBar
-          title={title}
-          subtitle={subtitle}
-          query={query}
-          syncing={syncing}
-          onQueryChange={setQuery}
-          actions={[
-            { label: t("compose"), icon: MailPlus, onClick: () => setComposerOpen(true), disabled: appAccounts.length === 0, tone: "primary" },
-            { label: t("refresh"), icon: RefreshCcw, onClick: refreshMail },
-            ...(isMailTab
-              ? [
-                  { label: t("archive"), icon: Archive, onClick: () => moveSelected("archive"), disabled: !selectedMessage },
-                  { label: t("trash"), icon: Trash2, onClick: () => moveSelected("trash"), disabled: !selectedMessage }
-                ]
-              : []),
-          ]}
-        />
-
-        {activeTab === "channels" ? (
-          <div className="channel-workspace">
-            <ChannelPanel
-              accounts={appAccounts}
-              providers={providerCatalog}
-              activeProviderId={activeProviderId}
-              verifying={verifyingChannels}
-              lastVerifiedAt={lastChannelCheck}
-              onProviderChange={changeProvider}
-              onVerifyAll={verifyAllChannels}
-            />
-          </div>
-        ) : activeTab === "settings" ? (
-          <SettingsPanel configs={cloudSyncConfigs} onConfigChange={changeCloudSyncConfig} />
-        ) : activeTab === "timetable" ? (
-          <div className="timetable-layout">
-            <SchedulePanel
-              activeAccountId={activeAccountId}
-              activeProviderId={activeProviderId}
-              accounts={appAccounts}
-              messages={messages}
-              events={appEvents}
-            />
-          </div>
-        ) : (
-          <div className="content-grid">
-            <MessageList
-              accounts={appAccounts}
-              messages={filteredMessages}
-              selectedId={selectedMessage?.id}
-              onSelect={selectMessage}
-            />
-            <MessageReader
-              account={selectedAccount}
-              message={selectedMessage}
-              onArchive={() => moveSelected("archive")}
-              onDelete={() => moveSelected("trash")}
-              onReply={startReply}
-              onToggleStar={(id) => {
-                const target = messages.find((message) => message.id === id);
-                if (target) {
-                  patchMessage(id, { starred: !target.starred });
-                }
-              }}
-            />
-          </div>
-        )}
-
-        <StatusBar
-          platform={platform}
+        <Sidebar
           accounts={appAccounts}
-          scopeLabel={scopeLabel}
-          messageCount={filteredMessages.length}
-          syncing={syncing}
+          folders={folders}
+          activeAccountId={activeAccountId}
+          activeTab={activeTab}
+          messages={messages}
+          onAccountChange={changeAccount}
+          onTabChange={setActiveTab}
+          onAccountAdd={addAccount}
+          onAccountDelete={deleteActiveAccount}
         />
-      </section>
 
-      {composerOpen ? (
-        <Composer
-          draft={draft}
-          onChange={setDraft}
-          onClose={() => setComposerOpen(false)}
-          onSend={sendDraft}
-        />
-      ) : null}
+        <section className="mail-workspace" aria-label="Mail workspace">
+          <TopBar
+            title={title}
+            subtitle={subtitle}
+            query={query}
+            syncing={syncing}
+            onQueryChange={setQuery}
+            actions={[
+              { label: t("compose"), icon: MailPlus, onClick: () => setComposerOpen(true), disabled: appAccounts.length === 0, tone: "primary" },
+              { label: t("refresh"), icon: RefreshCcw, onClick: refreshMail },
+              ...(isMailTab
+                ? [
+                    { label: t("archive"), icon: Archive, onClick: () => moveSelected("archive"), disabled: !selectedMessage },
+                    { label: t("trash"), icon: Trash2, onClick: () => moveSelected("trash"), disabled: !selectedMessage }
+                  ]
+                : []),
+            ]}
+          />
+
+          {activeTab === "channels" ? (
+            <div className="channel-workspace">
+              <ChannelPanel
+                accounts={appAccounts}
+                providers={providerCatalog}
+                activeProviderId={activeProviderId}
+                verifying={verifyingChannels}
+                lastVerifiedAt={lastChannelCheck}
+                onProviderChange={changeProvider}
+                onVerifyAll={verifyAllChannels}
+              />
+            </div>
+          ) : activeTab === "settings" ? (
+            <SettingsPanel configs={cloudSyncConfigs} onConfigChange={changeCloudSyncConfig} />
+          ) : activeTab === "timetable" ? (
+            <div className="timetable-layout">
+              <SchedulePanel
+                activeAccountId={activeAccountId}
+                activeProviderId={activeProviderId}
+                accounts={appAccounts}
+                messages={messages}
+                events={appEvents}
+                onCreateEvent={createCalendarEvent}
+                onUpdateEvent={updateCalendarEvent}
+                onDeleteEvent={deleteCalendarEvent}
+                onUpdateMessage={patchMessage}
+                onDeleteMessage={deleteMessage}
+              />
+            </div>
+          ) : (
+            <div className="content-grid">
+              <MessageList
+                accounts={appAccounts}
+                messages={filteredMessages}
+                selectedId={selectedMessage?.id}
+                onSelect={selectMessage}
+              />
+              <MessageReader
+                account={selectedAccount}
+                message={selectedMessage}
+                onArchive={() => moveSelected("archive")}
+                onDelete={() => moveSelected("trash")}
+                onReply={startReply}
+                onToggleStar={(id) => {
+                  const target = messages.find((message) => message.id === id);
+                  if (target) {
+                    patchMessage(id, { starred: !target.starred });
+                  }
+                }}
+              />
+            </div>
+          )}
+
+          <StatusBar
+            platform={platform}
+            accounts={appAccounts}
+            scopeLabel={scopeLabel}
+            messageCount={filteredMessages.length}
+            syncing={syncing}
+          />
+        </section>
+
+        {composerOpen ? (
+          <Composer
+            draft={draft}
+            onChange={setDraft}
+            onClose={() => setComposerOpen(false)}
+            onSend={sendDraft}
+          />
+        ) : null}
+      </div>
     </main>
   );
 }

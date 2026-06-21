@@ -143,5 +143,5 @@ export interface CalendarEvent {
   endsAt: string;
   location?: string;
   notes?: string;
-  source: "mail" | "calendar" | "provider";
+  source: "mail" | "calendar" | "provider" | "manual";
 }
