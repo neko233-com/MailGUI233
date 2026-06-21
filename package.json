@@ -1,6 +1,6 @@
 {
   "name": "mailgui233",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Small cross-platform desktop mail GUI built with Tauri, TypeScript, React, and Vite.",
   "author": "neko233-com",
   "license": "MIT",
@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "tauri dev",
     "dev:web": "vite --host 127.0.0.1",
+    "tauri": "tauri",
     "typecheck": "tsc --noEmit",
     "build:renderer": "vite build",
     "build:fast": "npm run build:renderer",
