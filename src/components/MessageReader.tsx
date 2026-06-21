@@ -1,4 +1,5 @@
 import { Archive, Mail, Reply, Star, Trash2 } from "lucide-react";
+import { useI18n } from "../i18n";
 import type { Account, MailMessage } from "../types";
 
 interface MessageReaderProps {
@@ -10,11 +11,6 @@ interface MessageReaderProps {
   onToggleStar: (id: string) => void;
 }
 
-const longDate = new Intl.DateTimeFormat("en", {
-  dateStyle: "full",
-  timeStyle: "short"
-});
-
 export function MessageReader({
   account,
   message,
@@ -23,18 +19,24 @@ export function MessageReader({
   onReply,
   onToggleStar
 }: MessageReaderProps) {
+  const { locale, t } = useI18n();
+  const longDate = new Intl.DateTimeFormat(locale, {
+    dateStyle: "full",
+    timeStyle: "short"
+  });
+
   if (!message) {
     return (
-      <section className="reader empty-reader" aria-label="Message reader">
+      <section className="reader empty-reader" aria-label={t("messageReader")}>
         <Mail size={36} />
-        <strong>Select a message</strong>
-        <span>Message content will appear here.</span>
+        <strong>{t("selectMessage")}</strong>
+        <span>{t("messageContentHint")}</span>
       </section>
     );
   }
 
   return (
-    <article className="reader" aria-label="Message reader">
+    <article className="reader" aria-label={t("messageReader")}>
       <header className="reader-header">
         <div>
           <h2>{message.subject}</h2>
@@ -44,28 +46,28 @@ export function MessageReader({
             </span>
           ) : null}
           <p>
-            From <strong>{message.from.name}</strong> &lt;{message.from.address}&gt;
+            {t("from")} <strong>{message.from.name}</strong> &lt;{message.from.address}&gt;
           </p>
           <time>{longDate.format(new Date(message.timestamp))}</time>
         </div>
         <div className="reader-actions">
-          <button title="Toggle star" onClick={() => onToggleStar(message.id)} type="button">
+          <button title={t("toggleStar")} onClick={() => onToggleStar(message.id)} type="button">
             <Star size={18} fill={message.starred ? "currentColor" : "none"} />
           </button>
-          <button title="Reply" onClick={() => onReply(message)} type="button">
+          <button title={t("reply")} onClick={() => onReply(message)} type="button">
             <Reply size={18} />
           </button>
-          <button title="Archive" onClick={onArchive} type="button">
+          <button title={t("archive")} onClick={onArchive} type="button">
             <Archive size={18} />
           </button>
-          <button title="Trash" onClick={onDelete} type="button">
+          <button title={t("trash")} onClick={onDelete} type="button">
             <Trash2 size={18} />
           </button>
         </div>
       </header>
 
       <div className="recipient-row">
-        <span>To</span>
+        <span>{t("to")}</span>
         <strong>{message.to.map((contact) => contact.address).join(", ")}</strong>
       </div>
 

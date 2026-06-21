@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
+import { useI18n } from "../i18n";
 import type { Account, AccountScope, Folder, FolderId, MailboxTabId, MailMessage } from "../types";
 
 const tabIcons: Record<MailboxTabId, LucideIcon> = {
@@ -24,6 +25,20 @@ const tabIcons: Record<MailboxTabId, LucideIcon> = {
 };
 
 const primaryTabs: MailboxTabId[] = ["inbox", "timetable", "starred", "sent", "drafts", "archive", "trash", "channels"];
+const tabLabels: Record<MailboxTabId, ReturnType<typeof labelKey>> = {
+  archive: "archive",
+  channels: "channels",
+  drafts: "drafts",
+  inbox: "inbox",
+  sent: "sent",
+  starred: "starred",
+  timetable: "timetable",
+  trash: "trash"
+};
+
+function labelKey(value: MailboxTabId) {
+  return value;
+}
 
 interface SidebarProps {
   accounts: Account[];
@@ -57,9 +72,10 @@ export function Sidebar({
   onAccountChange,
   onTabChange
 }: SidebarProps) {
+  const { t } = useI18n();
   const folderById = new Map(folders.map((folder) => [folder.id, folder]));
   const activeAccount = activeAccountId === "all" ? undefined : accounts.find((account) => account.id === activeAccountId);
-  const accountCountLabel = activeAccount ? activeAccount.address : `${accounts.length} mailboxes`;
+  const accountCountLabel = activeAccount ? activeAccount.address : t("mailboxes", { count: accounts.length });
 
   const unreadForScope = (accountId: AccountScope) =>
     messages.filter((message) => scopeMatches(message, accountId) && message.unread && message.folder !== "trash").length;
@@ -73,23 +89,23 @@ export function Sidebar({
     ).length;
 
   return (
-    <aside className="sidebar" aria-label="Mail navigation">
-      <section className="mailbox-column" aria-label="Mailboxes">
+    <aside className="sidebar" aria-label={t("mailNavigation")}>
+      <section className="mailbox-column" aria-label={t("mailboxList")}>
         <div className="mailbox-brand" aria-hidden="true">
           <span>M</span>
         </div>
 
-        <div className="account-tablist" role="tablist" aria-orientation="vertical" aria-label="Mailbox list">
+        <div className="account-tablist" role="tablist" aria-orientation="vertical" aria-label={t("mailboxList")}>
           <button
             className={`account-tab ${activeAccountId === "all" ? "is-active" : ""}`}
             onClick={() => onAccountChange("all")}
             role="tab"
             aria-selected={activeAccountId === "all"}
-            aria-label={`All mailboxes, ${unreadForScope("all")} unread`}
+            aria-label={`${t("allMailboxes")}, ${unreadForScope("all")} unread`}
             type="button"
           >
             <span className="account-glyph all-glyph">All</span>
-            <strong>All</strong>
+            <strong>{t("allMailboxes")}</strong>
             <em>{unreadForScope("all")}</em>
           </button>
 
@@ -112,19 +128,18 @@ export function Sidebar({
         </div>
       </section>
 
-      <section className="function-column" aria-label="Mailbox functions">
+      <section className="function-column" aria-label={t("mailboxFunctions")}>
         <header className="function-header">
-          <span>Mailbox</span>
-          <strong>{activeAccount?.name ?? "All mailboxes"}</strong>
+          <span>{t("mailbox")}</span>
+          <strong>{activeAccount?.name ?? t("allMailboxes")}</strong>
           <small>{accountCountLabel}</small>
         </header>
 
-        <nav className="function-tablist" role="tablist" aria-orientation="vertical" aria-label="Mailbox tabs">
+        <nav className="function-tablist" role="tablist" aria-orientation="vertical" aria-label={t("mailboxFunctions")}>
           {primaryTabs.map((tabId) => {
             const Icon = tabIcons[tabId];
             const folder = folderById.get(tabId as FolderId);
-            const label =
-              tabId === "timetable" ? "Timetable" : tabId === "channels" ? "Channels" : folder?.label ?? tabId;
+            const label = t(tabLabels[tabId]);
             const unread = folder ? unreadByFolder(folder.id) : 0;
 
             return (

@@ -1,5 +1,6 @@
 import { Paperclip, Star } from "lucide-react";
 import type { CSSProperties } from "react";
+import { useI18n } from "../i18n";
 import type { Account, MailMessage } from "../types";
 
 interface MessageListProps {
@@ -9,28 +10,28 @@ interface MessageListProps {
   onSelect: (id: string) => void;
 }
 
-const formatter = new Intl.DateTimeFormat("en", {
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit"
-});
-
 export function MessageList({ accounts, messages, selectedId, onSelect }: MessageListProps) {
+  const { locale, t } = useI18n();
   const accountById = new Map(accounts.map((account) => [account.id, account]));
+  const formatter = new Intl.DateTimeFormat(locale, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 
   return (
-    <section className="message-list" aria-label="Messages">
+    <section className="message-list" aria-label={t("messages")}>
       <div className="list-heading">
-        <strong>Messages</strong>
+        <strong>{t("messages")}</strong>
         <span>{messages.length}</span>
       </div>
 
       <div className="message-scroll">
         {messages.length === 0 ? (
           <div className="empty-state">
-            <strong>No messages</strong>
-            <span>Search or folder has no matching mail.</span>
+            <strong>{t("noMessages")}</strong>
+            <span>{t("searchEmpty")}</span>
           </div>
         ) : null}
 

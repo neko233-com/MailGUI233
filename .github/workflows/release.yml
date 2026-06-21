@@ -60,6 +60,9 @@ jobs:
           prerelease: false
           args: ${{ matrix.package-args }}
 
+      - name: Package size report
+        run: npm run package:size
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

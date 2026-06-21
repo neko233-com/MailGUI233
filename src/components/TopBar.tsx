@@ -1,5 +1,6 @@
 import { Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { languageOptions, useI18n } from "../i18n";
 
 interface Action {
   label: string;
@@ -19,11 +20,13 @@ interface TopBarProps {
 }
 
 export function TopBar({ title, subtitle, query, syncing, actions, onQueryChange }: TopBarProps) {
+  const { language, setLanguage, t } = useI18n();
+
   return (
     <header className="topbar">
       <div className="topbar-title">
         <strong>{title}</strong>
-        <span>{syncing ? "Syncing mailbox..." : subtitle}</span>
+        <span>{syncing ? t("syncingMailbox") : subtitle}</span>
       </div>
 
       <label className="searchbox">
@@ -31,11 +34,26 @@ export function TopBar({ title, subtitle, query, syncing, actions, onQueryChange
         <input
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Search sender, subject, labels"
+          placeholder={t("searchPlaceholder")}
         />
       </label>
 
-      <div className="toolbar" aria-label="Mail actions">
+      <div className="toolbar" aria-label={t("mailActions")}>
+        <label className="language-control">
+          <span>{t("language")}</span>
+          <select
+            aria-label={t("language")}
+            value={language}
+            onChange={(event) => setLanguage(event.target.value as typeof language)}
+          >
+            {languageOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {t(option.labelKey)}
+              </option>
+            ))}
+          </select>
+        </label>
+
         {actions.map((action) => {
           const Icon = action.icon;
           return (

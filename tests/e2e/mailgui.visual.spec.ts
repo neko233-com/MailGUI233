@@ -58,6 +58,9 @@ test.describe("MailGUI233 visual mailbox QA", () => {
       consoleIssues.push(`pageerror: ${error.message}`);
     });
 
+    await page.addInitScript(() => {
+      window.localStorage.setItem("mailgui233.language", "en");
+    });
     await page.goto("/");
     await expect(page).toHaveTitle("MailGUI233");
     await expectMaterialShader(page);
@@ -88,6 +91,15 @@ test.describe("MailGUI233 visual mailbox QA", () => {
       fullPage: false
     });
 
+    await page.getByLabel("Language").selectOption("zh");
+    await expect(page.getByRole("tab", { name: /所有邮箱/i })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "收件箱" })).toBeVisible();
+    await expect(page.getByPlaceholder("搜索发件人、主题、标签")).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mailgui233.language"))).toBe("zh");
+    await page.getByLabel("语言").selectOption("en");
+    await expect(page.getByRole("tab", { name: /All mailboxes/i })).toBeVisible();
+
     await page.getByRole("tab", { name: /QQ Mail/i }).click();
     await page.getByRole("tab", { name: "Timetable" }).click();
     const schedule = page.getByRole("region", { name: "Mail timetable" });
@@ -117,7 +129,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     });
 
     await page.getByRole("tab", { name: "Channels" }).click();
-    const channels = page.getByRole("region", { name: "Mail channel coverage" });
+    const channels = page.getByRole("region", { name: "Channel validation" });
     await expect(channels).toBeVisible();
     await expect(channels.getByRole("button", { name: /^Gmail channel/i })).toBeVisible();
     await expect(channels.getByRole("button", { name: /^QQ channel/i })).toBeVisible();
@@ -140,7 +152,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await page.getByPlaceholder("Search sender, subject, labels").fill("");
 
     await page.getByRole("button", { name: /Compose/i }).click();
-    const composer = page.getByRole("region", { name: "Compose message" });
+    const composer = page.getByRole("region", { name: "Compose" });
     await composer.getByPlaceholder("name@example.com").fill("qa@example.com");
     await composer.getByRole("textbox", { name: "Subject" }).fill("Visual QA send path");
     await composer
@@ -173,7 +185,7 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     });
 
     await page.getByRole("tab", { name: "Channels" }).click();
-    await expect(page.getByRole("region", { name: "Mail channel coverage" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Channel validation" })).toBeVisible();
     await page.getByRole("button", { name: /Verify all/i }).click();
     await expect(page.getByRole("button", { name: /Verifying/i })).toBeVisible();
 

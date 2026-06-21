@@ -9,6 +9,7 @@ import {
   WifiOff
 } from "lucide-react";
 import type { CSSProperties } from "react";
+import { useI18n } from "../i18n";
 import type { Account, ConnectionStatus, ProviderDefinition, ProviderScope } from "../types";
 
 interface ChannelPanelProps {
@@ -20,13 +21,6 @@ interface ChannelPanelProps {
   onProviderChange: (providerId: ProviderScope) => void;
   onVerifyAll: () => void;
 }
-
-const statusCopy: Record<ConnectionStatus, string> = {
-  connected: "Connected",
-  "needs-auth": "Needs auth",
-  syncing: "Checking",
-  offline: "Offline"
-};
 
 const statusIcon = {
   connected: CircleCheck,
@@ -53,12 +47,12 @@ function providerStatus(provider: ProviderDefinition, accounts: Account[], verif
   return "offline";
 }
 
-function formatVerifiedAt(value: string | null) {
+function formatVerifiedAt(value: string | null, locale: string, fallback: string) {
   if (!value) {
-    return "Not run yet";
+    return fallback;
   }
 
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit"
@@ -74,19 +68,30 @@ export function ChannelPanel({
   onProviderChange,
   onVerifyAll
 }: ChannelPanelProps) {
+  const { locale, t } = useI18n();
   const connectedCount = accounts.filter((account) => account.status === "connected").length;
   const needsAuthCount = accounts.filter((account) => account.status === "needs-auth").length;
   const providerCount = providers.length;
+  const statusCopy: Record<ConnectionStatus, string> = {
+    connected: t("connected"),
+    "needs-auth": t("needsAuth"),
+    syncing: t("checking"),
+    offline: "Offline"
+  };
 
   return (
-    <section className="channel-panel" aria-label="Mail channel coverage">
+    <section className="channel-panel" aria-label={t("channelValidation")}>
       <div className="channel-summary">
         <div className="channel-summary-title">
           <Globe2 size={19} />
           <div>
-            <strong>Channel validation</strong>
+            <strong>{t("channelValidation")}</strong>
             <span>
-              {providerCount} providers, {connectedCount} connected, {needsAuthCount} need credentials
+              {t("providersSummary", {
+                connected: connectedCount,
+                needsAuth: needsAuthCount,
+                providers: providerCount
+              })}
             </span>
           </div>
         </div>
@@ -96,10 +101,10 @@ export function ChannelPanel({
           onClick={onVerifyAll}
           disabled={verifying}
           type="button"
-          title="Run channel validation"
+          title={t("runChannelValidation")}
         >
           <RefreshCcw size={17} className={verifying ? "is-spinning" : ""} />
-          {verifying ? "Verifying" : "Verify all"}
+          {verifying ? t("verifying") : t("checkAllChannels")}
         </button>
 
         <button
@@ -107,10 +112,12 @@ export function ChannelPanel({
           onClick={() => onProviderChange("all")}
           type="button"
         >
-          All providers
+          {t("allMailboxes")}
         </button>
 
-        <span className="verified-stamp">Last check: {formatVerifiedAt(lastVerifiedAt)}</span>
+        <span className="verified-stamp">
+          {t("lastCheck", { time: formatVerifiedAt(lastVerifiedAt, locale, t("notRunYet")) })}
+        </span>
       </div>
 
       <div className="channel-grid">

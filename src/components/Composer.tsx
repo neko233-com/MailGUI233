@@ -1,4 +1,5 @@
 import { Send, X } from "lucide-react";
+import { useI18n } from "../i18n";
 import type { DraftMessage } from "../types";
 
 interface ComposerProps {
@@ -9,19 +10,20 @@ interface ComposerProps {
 }
 
 export function Composer({ draft, onChange, onClose, onSend }: ComposerProps) {
+  const { t } = useI18n();
   const canSend = draft.to.trim().length > 0 && draft.body.trim().length > 0;
 
   return (
-    <section className="composer" aria-label="Compose message">
+    <section className="composer" aria-label={t("compose")}>
       <header>
-        <strong>New message</strong>
-        <button onClick={onClose} title="Close composer" type="button">
+        <strong>{t("newMessage")}</strong>
+        <button onClick={onClose} title={t("closeComposer")} type="button">
           <X size={18} />
         </button>
       </header>
 
       <label>
-        <span>To</span>
+        <span>{t("to")}</span>
         <input
           value={draft.to}
           onChange={(event) => onChange({ ...draft, to: event.target.value })}
@@ -34,7 +36,7 @@ export function Composer({ draft, onChange, onClose, onSend }: ComposerProps) {
         <input
           value={draft.cc}
           onChange={(event) => onChange({ ...draft, cc: event.target.value })}
-          placeholder="optional"
+          placeholder={t("optional")}
         />
       </label>
 
@@ -50,13 +52,13 @@ export function Composer({ draft, onChange, onClose, onSend }: ComposerProps) {
       <textarea
         value={draft.body}
         onChange={(event) => onChange({ ...draft, body: event.target.value })}
-        placeholder="Write message..."
+        placeholder={t("writeMessage")}
       />
 
       <footer>
         <button className="send-button" onClick={onSend} disabled={!canSend} type="button">
           <Send size={17} />
-          Send
+          {t("send")}
         </button>
       </footer>
     </section>

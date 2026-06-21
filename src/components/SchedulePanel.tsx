@@ -1,6 +1,7 @@
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
+import { useI18n } from "../i18n";
 import type {
   Account,
   AccountScope,
@@ -30,33 +31,7 @@ interface TimetableItem {
 }
 
 const anchorDate = new Date("2026-06-21T12:00:00+08:00");
-const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const hourSlots = Array.from({ length: 13 }, (_, index) => index + 8);
-const viewModeLabels: Record<ScheduleViewMode, string> = {
-  day: "日",
-  week: "周",
-  month: "月"
-};
-
-const dayFormatter = new Intl.DateTimeFormat("en", {
-  month: "short",
-  day: "numeric",
-  timeZone: "Asia/Shanghai",
-  weekday: "short"
-});
-
-const monthFormatter = new Intl.DateTimeFormat("en", {
-  month: "long",
-  year: "numeric",
-  timeZone: "Asia/Shanghai"
-});
-
-const timeFormatter = new Intl.DateTimeFormat("en", {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Asia/Shanghai"
-});
-
 const hourFormatter = new Intl.DateTimeFormat("en", {
   hour: "2-digit",
   hour12: false,
@@ -94,14 +69,18 @@ function startOfMonthGrid(date: Date) {
   return startOfWeek(first);
 }
 
+function weekDaysForLabels() {
+  const monday = new Date("2026-06-15T12:00:00+08:00");
+
+  return Array.from({ length: 7 }, (_, index) => addDays(monday, index));
+}
+
 function itemHour(item: TimetableItem) {
   return Number(hourFormatter.format(new Date(item.startsAt)));
 }
 
-function formatItemTime(item: TimetableItem) {
-  return `${timeFormatter.format(new Date(item.startsAt))} - ${timeFormatter.format(
-    new Date(item.endsAt)
-  )}`;
+function formatItemTime(item: TimetableItem, formatter: Intl.DateTimeFormat) {
+  return `${formatter.format(new Date(item.startsAt))} - ${formatter.format(new Date(item.endsAt))}`;
 }
 
 function itemAccent(item: TimetableItem, accounts: Map<string, Account>) {
@@ -131,16 +110,52 @@ export function SchedulePanel({
   messages,
   events
 }: SchedulePanelProps) {
+  const { locale, t } = useI18n();
   const [viewMode, setViewMode] = useState<ScheduleViewMode>("day");
   const [visibleDate, setVisibleDate] = useState(anchorDate);
+  const dayFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        month: "short",
+        day: "numeric",
+        timeZone: "Asia/Shanghai",
+        weekday: "short"
+      }),
+    [locale]
+  );
+  const monthFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        month: "long",
+        year: "numeric",
+        timeZone: "Asia/Shanghai"
+      }),
+    [locale]
+  );
+  const timeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Shanghai"
+      }),
+    [locale]
+  );
+  const weekdayLabels = useMemo(
+    () =>
+      weekDaysForLabels().map((date) =>
+        new Intl.DateTimeFormat(locale, { timeZone: "Asia/Shanghai", weekday: "short" }).format(date)
+      ),
+    [locale]
+  );
 
   const accountById = useMemo(() => new Map(accounts.map((account) => [account.id, account])), [accounts]);
   const scopeTitle =
     activeAccountId !== "all"
-      ? accountById.get(activeAccountId)?.name ?? "Mailbox"
+      ? accountById.get(activeAccountId)?.name ?? t("mailbox")
       : activeProviderId !== "all"
-        ? `${activeProviderId.toUpperCase()} mail`
-        : "All mailboxes";
+        ? `${activeProviderId.toUpperCase()} ${t("mail")}`
+        : t("allMailboxes");
   const weekDays = useMemo(() => {
     const first = startOfWeek(visibleDate);
     return Array.from({ length: 7 }, (_, index) => addDays(first, index));
@@ -208,31 +223,31 @@ export function SchedulePanel({
   const dayItems = itemsByDay.get(dayKey(visibleDate)) ?? [];
 
   return (
-    <section className="schedule-panel" aria-label="Mail timetable">
+    <section className="schedule-panel" aria-label={t("mailTimetable")}>
       <header className="schedule-header">
         <div className="schedule-title">
           <CalendarDays size={18} />
           <div>
-            <strong>Mail timetable</strong>
+            <strong>{t("mailTimetable")}</strong>
             <span>
               {scopeTitle} / {viewMode === "month" ? monthFormatter.format(visibleDate) : dayFormatter.format(visibleDate)}
             </span>
           </div>
         </div>
 
-        <div className="schedule-nav" aria-label="Schedule navigation">
+        <div className="schedule-nav" aria-label={t("scheduleNavigation")}>
           <button onClick={() => shift(-1)} type="button" title="Previous">
             <ChevronLeft size={17} />
           </button>
           <button className="today-button" onClick={setToday} type="button">
-            Today
+            {t("today")}
           </button>
           <button onClick={() => shift(1)} type="button" title="Next">
             <ChevronRight size={17} />
           </button>
         </div>
 
-        <div className="schedule-tabs" aria-label="Schedule view">
+        <div className="schedule-tabs" aria-label={t("scheduleView")}>
           {(["day", "week", "month"] satisfies ScheduleViewMode[]).map((mode) => (
             <button
               key={mode}
@@ -240,7 +255,7 @@ export function SchedulePanel({
               onClick={() => setViewMode(mode)}
               type="button"
             >
-              {viewModeLabels[mode]}
+              {t(mode)}
             </button>
           ))}
         </div>
@@ -260,11 +275,11 @@ export function SchedulePanel({
                       key={item.id}
                       style={{ "--event-accent": itemAccent(item, accountById) } as CSSProperties}
                     >
-                      <em>{item.kind === "mail" ? "Mail" : "Plan"}</em>
+                      <em>{item.kind === "mail" ? t("mail") : t("plan")}</em>
                       <strong>{item.title}</strong>
                       <span>
                         <Clock size={12} />
-                        {formatItemTime(item)}
+                        {formatItemTime(item, timeFormatter)}
                       </span>
                       {item.location ? (
                         <span>
@@ -295,9 +310,9 @@ export function SchedulePanel({
                   key={item.id}
                   style={{ "--event-accent": itemAccent(item, accountById) } as CSSProperties}
                 >
-                  <em>{item.kind === "mail" ? "Mail" : "Plan"}</em>
+                  <em>{item.kind === "mail" ? t("mail") : t("plan")}</em>
                   <strong>{item.title}</strong>
-                  <span>{formatItemTime(item)}</span>
+                  <span>{formatItemTime(item, timeFormatter)}</span>
                 </article>
               ))}
             </section>

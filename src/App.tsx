@@ -12,6 +12,7 @@ import { ShaderBackdrop } from "./components/ShaderBackdrop";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { TopBar } from "./components/TopBar";
+import { useI18n } from "./i18n";
 
 const emptyDraft = (): DraftMessage => ({
   id: `draft-${Date.now()}`,
@@ -42,6 +43,7 @@ async function getDesktopPlatform() {
 }
 
 function App() {
+  const { t } = useI18n();
   const [messages, setMessages] = useState<MailMessage[]>(initialMessages);
   const [activeAccountId, setActiveAccountId] = useState<AccountScope>("all");
   const [activeProviderId, setActiveProviderId] = useState<ProviderScope>("all");
@@ -74,15 +76,23 @@ function App() {
       ? undefined
       : providerCatalog.find((provider) => provider.id === activeProviderId);
   const selectedAccount = selectedMessage ? accountById.get(selectedMessage.accountId) : undefined;
-  const activeFolderLabel = folders.find((folder) => folder.id === activeFolder)?.label ?? "Inbox";
+  const folderLabelById: Record<FolderId, string> = {
+    archive: t("archive"),
+    drafts: t("drafts"),
+    inbox: t("inbox"),
+    sent: t("sent"),
+    starred: t("starred"),
+    trash: t("trash")
+  };
+  const activeFolderLabel = folderLabelById[activeFolder] ?? t("inbox");
   const activeViewLabel =
-    activeTab === "timetable" ? "Timetable" : activeTab === "channels" ? "Channels" : activeFolderLabel;
-  const title = activeAccount?.name ?? activeProvider?.name ?? "All mailboxes";
+    activeTab === "timetable" ? t("timetable") : activeTab === "channels" ? t("channels") : activeFolderLabel;
+  const title = activeAccount?.name ?? activeProvider?.name ?? t("allMailboxes");
   const subtitle =
     activeTab === "channels"
       ? "Verify Gmail, QQ, Outlook, iCloud, NetEase, Proton, and custom IMAP"
       : `${activeViewLabel} / ${activeAccount?.address ?? activeProvider?.capabilitySummary ?? "all providers"}`;
-  const scopeLabel = activeAccount?.address ?? activeProvider?.shortName ?? "All mailboxes";
+  const scopeLabel = activeAccount?.address ?? activeProvider?.shortName ?? t("allMailboxes");
 
   useEffect(() => {
     getDesktopPlatform().then((value) => setPlatform(value));
@@ -204,12 +214,12 @@ function App() {
           syncing={syncing}
           onQueryChange={setQuery}
           actions={[
-            { label: "Compose", icon: MailPlus, onClick: () => setComposerOpen(true), tone: "primary" },
-            { label: "Refresh", icon: RefreshCcw, onClick: refreshMail },
+            { label: t("compose"), icon: MailPlus, onClick: () => setComposerOpen(true), tone: "primary" },
+            { label: t("refresh"), icon: RefreshCcw, onClick: refreshMail },
             ...(isMailTab
               ? [
-                  { label: "Archive", icon: Archive, onClick: () => moveSelected("archive"), disabled: !selectedMessage },
-                  { label: "Trash", icon: Trash2, onClick: () => moveSelected("trash"), disabled: !selectedMessage }
+                  { label: t("archive"), icon: Archive, onClick: () => moveSelected("archive"), disabled: !selectedMessage },
+                  { label: t("trash"), icon: Trash2, onClick: () => moveSelected("trash"), disabled: !selectedMessage }
                 ]
               : []),
           ]}
