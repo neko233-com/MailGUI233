@@ -108,6 +108,25 @@ function createProgram(gl: WebGLRenderingContext) {
   return program;
 }
 
+function framebufferVariance(gl: WebGLRenderingContext, canvas: HTMLCanvasElement) {
+  const points = [
+    [Math.floor(canvas.width * 0.22), Math.floor(canvas.height * 0.28)],
+    [Math.floor(canvas.width * 0.54), Math.floor(canvas.height * 0.5)],
+    [Math.floor(canvas.width * 0.82), Math.floor(canvas.height * 0.76)]
+  ];
+  const pixels: number[] = [];
+
+  for (const [x, y] of points) {
+    const pixel = new Uint8Array(4);
+    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+    pixels.push(pixel[0], pixel[1], pixel[2]);
+  }
+
+  const average = pixels.reduce((sum, value) => sum + value, 0) / pixels.length;
+
+  return pixels.reduce((sum, value) => sum + Math.abs(value - average), 0) / pixels.length;
+}
+
 export function ShaderBackdrop() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -181,7 +200,8 @@ export function ShaderBackdrop() {
       context.uniform2f(resolutionLocation, targetCanvas.width, targetCanvas.height);
       context.uniform1f(timeLocation, reduceMotion ? 0 : time * 0.001);
       context.drawArrays(context.TRIANGLES, 0, 6);
-      targetCanvas.dataset.shaderReady = "true";
+      targetCanvas.dataset.shaderReady =
+        framebufferVariance(context, targetCanvas) > 3 ? "true" : "fallback";
 
       if (!reduceMotion) {
         animationId = window.requestAnimationFrame(render);
