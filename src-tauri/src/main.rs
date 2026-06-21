@@ -6,8 +6,6 @@ fn platform() -> &'static str {
         "windows"
     } else if cfg!(target_os = "macos") {
         "macos"
-    } else if cfg!(target_os = "linux") {
-        "linux"
     } else {
         "desktop"
     }

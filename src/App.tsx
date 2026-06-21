@@ -28,10 +28,6 @@ function isFolderTab(tabId: MailboxTabId): tabId is FolderId {
 }
 
 async function getDesktopPlatform() {
-  if (window.mailgui233?.getPlatform) {
-    return window.mailgui233.getPlatform();
-  }
-
   try {
     const { invoke, isTauri } = await import("@tauri-apps/api/core");
 

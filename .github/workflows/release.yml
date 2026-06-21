@@ -23,9 +23,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
-            package-args: --bundles appimage deb
-            artifact-name: MailGUI233-linux
           - os: windows-latest
             package-args: --bundles nsis --no-sign
             artifact-name: MailGUI233-windows
@@ -51,12 +48,6 @@ jobs:
         with:
           workspaces: src-tauri -> target
 
-      - name: Install Linux Tauri dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
-
       - name: Install
         run: npm ci --prefer-offline
 
@@ -77,8 +68,6 @@ jobs:
         with:
           name: ${{ matrix.artifact-name }}
           path: |
-            src-tauri/target/release/bundle/**/*.AppImage
-            src-tauri/target/release/bundle/**/*.deb
             src-tauri/target/release/bundle/**/*.dmg
             src-tauri/target/release/bundle/**/*.exe
             src-tauri/target/release/bundle/**/*.msi
