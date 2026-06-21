@@ -2,28 +2,35 @@ export function LogoMark() {
   return (
     <svg className="logo-mark" viewBox="0 0 64 64" role="img" aria-label="MailGUI233 logo">
       <defs>
-        <linearGradient id="logo-shell" x1="12" x2="54" y1="8" y2="58" gradientUnits="userSpaceOnUse">
+        <linearGradient id="logo-shell" x1="10" x2="54" y1="7" y2="58" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#ffffff" />
-          <stop offset="0.48" stopColor="#dce8ee" />
-          <stop offset="1" stopColor="#101820" />
+          <stop offset="0.56" stopColor="#eaf6fb" />
+          <stop offset="1" stopColor="#8ecde1" />
         </linearGradient>
-        <linearGradient id="logo-flap" x1="11" x2="53" y1="17" y2="46" gradientUnits="userSpaceOnUse">
+        <linearGradient id="logo-envelope" x1="15" x2="49" y1="18" y2="47" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#f8fcff" />
-          <stop offset="1" stopColor="#8fd7de" />
+          <stop offset="1" stopColor="#d7edf5" />
         </linearGradient>
+        <filter id="logo-soft-shadow" x="-20%" y="-20%" width="140%" height="150%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#4b7482" floodOpacity="0.18" />
+        </filter>
       </defs>
       <rect width="64" height="64" rx="14" fill="url(#logo-shell)" />
+      <rect x="3.5" y="3.5" width="57" height="57" rx="12" fill="none" stroke="#ffffff" strokeOpacity="0.66" />
       <path
-        d="M13 22.5C13 19.5 15.5 17 18.6 17h26.8c3.1 0 5.6 2.5 5.6 5.5v19c0 3-2.5 5.5-5.6 5.5H18.6A5.55 5.55 0 0 1 13 41.5v-19Z"
-        fill="#f8fbfc"
-        opacity="0.94"
+        d="M14 23.2c0-3 2.4-5.2 5.4-5.2h25.2c3 0 5.4 2.3 5.4 5.2v18.6c0 2.9-2.4 5.2-5.4 5.2H19.4c-3 0-5.4-2.3-5.4-5.2V23.2Z"
+        fill="url(#logo-envelope)"
+        filter="url(#logo-soft-shadow)"
       />
-      <path d="m16 21 15.9 14.2L48 21" fill="none" stroke="url(#logo-flap)" strokeLinecap="round" strokeWidth="4" />
-      <path d="m16 44 13.3-13M48 44 34.6 31" fill="none" stroke="#1f3a40" strokeOpacity="0.18" strokeWidth="3" />
-      <text x="32" y="43" fill="#0f181d" fontFamily="Inter, system-ui, sans-serif" fontSize="12" fontWeight="900" textAnchor="middle">
+      <path d="m17 22 15 13.1L47 22" fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.2" />
+      <path d="m17 22 15 13.1L47 22" fill="none" stroke="#4dabca" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.72" strokeWidth="2" />
+      <path d="m17.5 43.4 12-11.2M46.5 43.4 34.5 32.2" fill="none" stroke="#5f9fb4" strokeOpacity="0.42" strokeWidth="2.5" />
+      <rect x="22.5" y="38.6" width="19" height="10.5" rx="5.25" fill="#ffffff" fillOpacity="0.92" />
+      <rect x="22.5" y="38.6" width="19" height="10.5" rx="5.25" fill="none" stroke="#8ccfe3" strokeOpacity="0.44" />
+      <text x="32" y="46.55" fill="#0f83ad" fontFamily="Inter, system-ui, sans-serif" fontSize="8.1" fontWeight="880" textAnchor="middle">
         233
       </text>
-      <path d="M18 18.5h28" stroke="#ffffff" strokeLinecap="round" strokeOpacity="0.72" />
+      <path d="M16 18.5h32" stroke="#ffffff" strokeLinecap="round" strokeOpacity="0.68" />
     </svg>
   );
 }
