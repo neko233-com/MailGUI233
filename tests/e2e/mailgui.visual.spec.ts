@@ -94,7 +94,8 @@ test.describe("MailGUI233 visual mailbox QA", () => {
       fullPage: false
     });
 
-    await page.getByLabel("Language").selectOption("zh");
+    await page.getByRole("button", { name: "Language" }).click();
+    await page.getByRole("menu").getByRole("menuitem", { name: "Chinese" }).click();
     await expect(page.getByRole("tab", { name: /所有邮箱/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: /^QQ邮箱,/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: /工作QQ邮箱/i })).toBeVisible();
@@ -102,14 +103,28 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     await expect(page.getByPlaceholder("搜索发件人、主题、tag:安全、provider:qq")).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mailgui233.language"))).toBe("zh");
-    await page.getByLabel("语言").selectOption("en");
+    await page.getByRole("button", { name: "语言" }).click();
+    await page.getByRole("menuitem", { name: "英语" }).click();
     await expect(page.getByRole("tab", { name: /All mailboxes/i })).toBeVisible();
     await page.getByPlaceholder("Search mailboxes").fill("qq work");
     await expect(page.getByRole("tab", { name: /QQ Work/i })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Personal Gmail/i })).toHaveCount(0);
     await page.getByPlaceholder("Search mailboxes").fill("");
 
-    await page.getByRole("tab", { name: /^QQ,/i }).click();
+    await page.getByRole("button", { name: "Add mailbox" }).click();
+    const accountSetup = page.getByRole("dialog", { name: "Add mailbox" });
+    await expect(accountSetup).toBeVisible();
+    await expect(accountSetup.getByText("Add personal or business mail")).toBeVisible();
+    await accountSetup.getByLabel("Mailbox address").fill("visual-qa@qq.com");
+    await expect(accountSetup.getByLabel("IMAP")).toHaveValue("imap.qq.com:993");
+    await expect(accountSetup.getByLabel("POP3")).toHaveValue("pop.qq.com:995");
+    await expect(accountSetup.getByLabel("SMTP")).toHaveValue("smtp.qq.com:465");
+    await accountSetup.getByLabel("Authorization code").fill("qq-auth-code");
+    await accountSetup.getByLabel("SMTP").fill("smtp.qq.com:587");
+    await accountSetup.getByRole("button", { name: "Connect mailbox" }).click();
+    await expect(page.getByRole("tab", { name: "QQ, QQ, needs auth" })).toBeVisible();
+
+    await page.getByRole("tab", { name: "QQ, QQ, connected" }).click();
     await page.getByRole("tab", { name: "Timetable" }).click();
     const schedule = page.getByRole("region", { name: "Mail timetable" });
     await expect(schedule).toBeVisible();
@@ -211,13 +226,38 @@ test.describe("MailGUI233 visual mailbox QA", () => {
     });
     const settings = page.getByRole("region", { name: "System settings" });
     await expect(settings).toBeVisible();
-    await expect(settings.getByText("Current version 0.1.11")).toBeVisible();
+    await expect(settings.getByText("Current version 0.1.12")).toBeVisible();
+    const mailboxSettings = settings.getByRole("region", { name: "Mailbox settings" });
+    await expect(mailboxSettings).toBeVisible();
+    await expect(mailboxSettings.getByRole("button", { name: /neko233@gmail.com/i })).toBeVisible();
+    await mailboxSettings.getByRole("button", { name: /neko233@gmail.com/i }).click();
+    await expect(mailboxSettings.getByLabel("Mailbox address")).toHaveValue("neko233@gmail.com");
+    await mailboxSettings.getByRole("tab", { name: "Receive" }).click();
+    await expect(mailboxSettings.getByLabel("IMAP")).toHaveValue("Gmail API");
+    await mailboxSettings.getByRole("tab", { name: "Write" }).click();
+    await mailboxSettings.getByLabel("SMTP").fill("smtp.gmail.com:587");
+    await expect(mailboxSettings.getByLabel("SMTP")).toHaveValue("smtp.gmail.com:587");
+    await mailboxSettings.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: testInfo.outputPath("desktop-mailbox-settings.png"),
+      fullPage: false
+    });
     await settings.getByRole("button", { name: "Check updates" }).click();
     await expect(settings.getByText("Version 9.9.9 is available.")).toBeVisible();
     await expect(settings.getByRole("button", { name: "Download update" })).toBeVisible();
     await settings.getByLabel("Automatically check for updates").check();
     await settings.getByLabel("Launch at startup").check();
     await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mailgui233.autoStart"))).toBe("true");
+    await settings.getByLabel("Custom CSS URL").fill("https://example.com/mailgui233-theme.css");
+    await expect
+      .poll(() =>
+        page.evaluate(() => document.querySelector<HTMLLinkElement>("#mailgui233-custom-theme-css")?.href)
+      )
+      .toBe("https://example.com/mailgui233-theme.css");
+    await settings.getByRole("button", { name: "Reset theme" }).click();
+    await expect
+      .poll(() => page.evaluate(() => document.querySelector("#mailgui233-custom-theme-css") === null))
+      .toBe(true);
     await expect(settings.getByRole("tab", { name: /Git repository/i })).toBeVisible();
     await expect(settings.getByRole("tab", { name: /WebDAV/i })).toBeVisible();
     await expect(settings.getByText("Git repository is ready for native sync validation.")).toBeVisible();

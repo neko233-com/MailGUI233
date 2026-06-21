@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MailGUI233</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #101418;
+        --muted: #66737f;
+        --line: #dbe3e8;
+        --paper: #f3f7f9;
+        --accent: #0b8f8a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+      }
+
+      header {
+        padding: 56px clamp(20px, 6vw, 86px) 28px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(42px, 7vw, 86px);
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 780px;
+        margin: 16px 0 0;
+        color: var(--muted);
+        font-size: clamp(18px, 2vw, 24px);
+        line-height: 1.5;
+      }
+
+      .hero,
+      section {
+        padding: 0 clamp(20px, 6vw, 86px) 44px;
+      }
+
+      img {
+        display: block;
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: 0 28px 90px rgb(20 35 48 / 14%);
+      }
+
+      section {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.38fr) minmax(0, 1fr);
+        gap: 28px;
+        align-items: start;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 38px);
+      }
+
+      p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .feature-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        padding: 0 clamp(20px, 6vw, 86px) 70px;
+      }
+
+      .feature-list div {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px;
+        background: rgb(255 255 255 / 72%);
+      }
+
+      .feature-list strong {
+        display: block;
+      }
+
+      footer {
+        padding: 26px clamp(20px, 6vw, 86px) 46px;
+        color: var(--muted);
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 760;
+      }
+
+      @media (max-width: 820px) {
+        section,
+        .feature-list {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>MailGUI233</h1>
+      <p class="lead">A tiny desktop mail GUI with multi-provider accounts, a mail timetable, editable server presets, cloud sync strategies, and user-owned CSS themes.</p>
+    </header>
+
+    <div class="hero">
+      <img src="assets/mailgui233-inbox.png" alt="MailGUI233 inbox and reader UI">
+    </div>
+
+    <section>
+      <div>
+        <h2>Two-column navigation</h2>
+        <p>Accounts stay in the first rail. Mailbox functions stay in the second rail. The layout stays predictable when users switch contexts.</p>
+      </div>
+      <img src="assets/mailgui233-two-column.png" alt="Two-column mailbox navigation">
+    </section>
+
+    <section>
+      <div>
+        <h2>Mail timetable</h2>
+        <p>Day, week, and month views turn mail into scheduled work. Items support create, edit, duplicate, delete, and right-click menus.</p>
+      </div>
+      <img src="assets/mailgui233-timetable.png" alt="Mail timetable month view">
+    </section>
+
+    <section>
+      <div>
+        <h2>Mailbox settings</h2>
+        <p>Provider setup is app-owned UI. IMAP, POP3, and SMTP presets are visible and editable instead of hidden behind native prompts.</p>
+      </div>
+      <img src="assets/mailgui233-mailbox-settings.png" alt="Mailbox account and server settings">
+    </section>
+
+    <section>
+      <div>
+        <h2>Cloud sync and themes</h2>
+        <p>Git, WebDAV, and local-folder sync are strategy-driven. A single custom CSS URL can override the interface as the highest-priority theme layer.</p>
+      </div>
+      <img src="assets/mailgui233-settings.png" alt="Cloud sync and custom theme settings">
+    </section>
+
+    <div class="feature-list">
+      <div><strong>Small package</strong><p>Windows NSIS installer stays around two megabytes in current builds.</p></div>
+      <div><strong>Visual QA</strong><p>Playwright screenshots verify desktop and mobile product flows.</p></div>
+      <div><strong>Agent-first</strong><p>Install, launch, status, uninstall, package, and verification scripts are designed for automation.</p></div>
+    </div>
+
+    <footer>
+      <a href="https://github.com/neko233-com/MailGUI233">GitHub repository</a>
+    </footer>
+  </body>
+</html>

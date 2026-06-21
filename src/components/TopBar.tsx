@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { languageOptions, useI18n } from "../i18n";
 
@@ -21,6 +22,8 @@ interface TopBarProps {
 
 export function TopBar({ title, subtitle, query, syncing, actions, onQueryChange }: TopBarProps) {
   const { language, setLanguage, t } = useI18n();
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const activeLanguage = languageOptions.find((option) => option.value === language) ?? languageOptions[0];
 
   return (
     <header className="topbar">
@@ -39,20 +42,36 @@ export function TopBar({ title, subtitle, query, syncing, actions, onQueryChange
       </label>
 
       <div className="toolbar" aria-label={t("mailActions")}>
-        <label className="language-control">
+        <div className="language-control">
           <span>{t("language")}</span>
-          <select
+          <button
+            aria-expanded={languageOpen}
+            aria-haspopup="menu"
             aria-label={t("language")}
-            value={language}
-            onChange={(event) => setLanguage(event.target.value as typeof language)}
+            onClick={() => setLanguageOpen((current) => !current)}
+            type="button"
           >
-            {languageOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {t(option.labelKey)}
-              </option>
-            ))}
-          </select>
-        </label>
+            {t(activeLanguage.labelKey)}
+          </button>
+          {languageOpen ? (
+            <div className="language-menu" role="menu">
+              {languageOptions.map((option) => (
+                <button
+                  key={option.value}
+                  className={option.value === language ? "is-active" : ""}
+                  onClick={() => {
+                    setLanguage(option.value);
+                    setLanguageOpen(false);
+                  }}
+                  role="menuitem"
+                  type="button"
+                >
+                  {t(option.labelKey)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         {actions.map((action) => {
           const Icon = action.icon;

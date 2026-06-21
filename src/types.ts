@@ -49,6 +49,7 @@ export interface Account {
   status: ConnectionStatus;
   auth: string;
   incoming: string;
+  pop3?: string;
   outgoing: string;
   lastSync: string;
   capabilities: MailCapability[];
@@ -67,6 +68,7 @@ export interface ProviderDefinition {
   accent: string;
   auth: string;
   incoming: string;
+  pop3?: string;
   outgoing: string;
   capabilitySummary: string;
   setupNote: string;

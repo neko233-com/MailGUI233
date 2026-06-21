@@ -7,6 +7,7 @@ import { createSentMessage, filterMessages } from "./lib/mailActions";
 import type {
   Account,
   AccountScope,
+  AccountProvider,
   CalendarEvent,
   CloudSyncConfig,
   CloudSyncStrategyId,
@@ -14,9 +15,9 @@ import type {
   FolderId,
   MailboxTabId,
   MailMessage,
-  AccountProvider,
   ProviderScope
 } from "./types";
+import { AccountSetupModal, type AccountSetupValues } from "./components/AccountSetupModal";
 import { ChannelPanel } from "./components/ChannelPanel";
 import { Composer } from "./components/Composer";
 import { MessageList } from "./components/MessageList";
@@ -66,6 +67,7 @@ function demoDataEnabled() {
 
 const accountsStorageKey = "mailgui233.accounts";
 const calendarEventsStorageKey = "mailgui233.calendarEvents";
+const customThemeCssUrlStorageKey = "mailgui233.customThemeCssUrl";
 
 function readStoredAccounts() {
   try {
@@ -85,6 +87,10 @@ function readStoredCalendarEvents() {
   }
 }
 
+function readStoredThemeCssUrl() {
+  return window.localStorage.getItem(customThemeCssUrlStorageKey) ?? "";
+}
+
 function providerFromAddress(address: string): AccountProvider {
   const domain = address.split("@")[1]?.toLowerCase() ?? "";
 
@@ -100,9 +106,10 @@ function providerFromAddress(address: string): AccountProvider {
   return "imap";
 }
 
-function createAccount(address: string): Account {
-  const provider = providerFromAddress(address);
+function createAccount(values: AccountSetupValues): Account {
+  const provider = values.provider || providerFromAddress(values.address);
   const providerDefinition = providerCatalog.find((item) => item.id === provider) ?? providerCatalog.at(-1)!;
+  const address = values.address;
   const localPart = address.split("@")[0] || address;
 
   return {
@@ -113,9 +120,10 @@ function createAccount(address: string): Account {
     accent: providerDefinition.accent,
     unread: 0,
     status: "needs-auth",
-    auth: providerDefinition.auth,
-    incoming: providerDefinition.incoming,
-    outgoing: providerDefinition.outgoing,
+    auth: values.auth || providerDefinition.auth,
+    incoming: values.incoming || providerDefinition.incoming,
+    pop3: values.pop3 || providerDefinition.pop3,
+    outgoing: values.outgoing || providerDefinition.outgoing,
     lastSync: new Date().toISOString(),
     capabilities: providerDefinition.capabilities
   };
@@ -137,6 +145,8 @@ function App() {
   const [syncing, setSyncing] = useState(false);
   const [cloudSyncConfigs, setCloudSyncConfigs] =
     useState<Record<CloudSyncStrategyId, CloudSyncConfig>>(initialCloudSyncConfigs);
+  const [accountSetupOpen, setAccountSetupOpen] = useState(false);
+  const [customThemeCssUrl, setCustomThemeCssUrl] = useState(readStoredThemeCssUrl);
   const [verifyingChannels, setVerifyingChannels] = useState(false);
   const [lastChannelCheck, setLastChannelCheck] = useState<string | null>(null);
   const [platform, setPlatform] = useState("browser");
@@ -193,6 +203,28 @@ function App() {
   useEffect(() => {
     getDesktopPlatform().then((value) => setPlatform(value));
   }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(customThemeCssUrlStorageKey, customThemeCssUrl);
+
+    const linkId = "mailgui233-custom-theme-css";
+    const currentLink = document.getElementById(linkId);
+
+    if (!customThemeCssUrl.trim()) {
+      currentLink?.remove();
+      return;
+    }
+
+    const link = currentLink instanceof HTMLLinkElement ? currentLink : document.createElement("link");
+    link.id = linkId;
+    link.rel = "stylesheet";
+    link.href = customThemeCssUrl.trim();
+    link.dataset.themeLayer = "user-override";
+
+    if (!currentLink) {
+      document.head.append(link);
+    }
+  }, [customThemeCssUrl]);
 
   useEffect(() => {
     if (!useDemoData) {
@@ -278,18 +310,16 @@ function App() {
   }
 
   function addAccount() {
-    const address = window.prompt(t("addMailboxPrompt"));
-    const normalized = address?.trim().toLowerCase();
+    setAccountSetupOpen(true);
+  }
 
-    if (!normalized || !normalized.includes("@")) {
-      return;
-    }
-
-    const account = createAccount(normalized);
+  function addAccountFromSetup(values: AccountSetupValues) {
+    const account = createAccount(values);
     setAppAccounts((current) => [account, ...current]);
     setActiveAccountId(account.id);
     setActiveProviderId("all");
     setActiveTab("inbox");
+    setAccountSetupOpen(false);
   }
 
   function deleteActiveAccount() {
@@ -302,6 +332,12 @@ function App() {
     setAppEvents((current) => current.filter((event) => event.accountId !== activeAccountId));
     setActiveAccountId("all");
     setSelectedId(undefined);
+  }
+
+  function updateAccount(accountId: string, patch: Partial<Account>) {
+    setAppAccounts((current) =>
+      current.map((account) => (account.id === accountId ? { ...account, ...patch } : account))
+    );
   }
 
   function createCalendarEvent(event: CalendarEvent) {
@@ -410,7 +446,14 @@ function App() {
               />
             </div>
           ) : activeTab === "settings" ? (
-            <SettingsPanel configs={cloudSyncConfigs} onConfigChange={changeCloudSyncConfig} />
+          <SettingsPanel
+            accounts={appAccounts}
+            configs={cloudSyncConfigs}
+            customThemeCssUrl={customThemeCssUrl}
+            onAccountChange={updateAccount}
+            onConfigChange={changeCloudSyncConfig}
+            onThemeCssUrlChange={setCustomThemeCssUrl}
+          />
           ) : activeTab === "timetable" ? (
             <div className="timetable-layout">
               <SchedulePanel
@@ -465,6 +508,13 @@ function App() {
             onChange={setDraft}
             onClose={() => setComposerOpen(false)}
             onSend={sendDraft}
+          />
+        ) : null}
+        {accountSetupOpen ? (
+          <AccountSetupModal
+            providers={providerCatalog}
+            onClose={() => setAccountSetupOpen(false)}
+            onSubmit={addAccountFromSetup}
           />
         ) : null}
       </div>
