@@ -1,15 +1,32 @@
-import type { DraftMessage, FolderId, MailMessage } from "../types";
+import type {
+  Account,
+  AccountScope,
+  DraftMessage,
+  FolderId,
+  MailMessage,
+  ProviderScope
+} from "../types";
 
 export function filterMessages(
   messages: MailMessage[],
   folder: FolderId,
-  accountId: string,
-  query: string
+  accountId: AccountScope,
+  query: string,
+  accounts: Account[],
+  providerId: ProviderScope
 ) {
   const normalized = query.trim().toLowerCase();
+  const accountById = new Map(accounts.map((account) => [account.id, account]));
 
   return messages
-    .filter((message) => message.accountId === accountId)
+    .filter((message) => accountId === "all" || message.accountId === accountId)
+    .filter((message) => {
+      if (providerId === "all") {
+        return true;
+      }
+
+      return accountById.get(message.accountId)?.provider === providerId;
+    })
     .filter((message) => {
       if (folder === "starred") {
         return message.starred && message.folder !== "trash";
@@ -36,33 +53,39 @@ export function filterMessages(
     .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
 }
 
-export function createSentMessage(draft: DraftMessage, accountId: string): MailMessage {
+function parseContacts(value: string) {
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const match = entry.match(/^(?<name>.*?)\s*<(?<address>[^>]+)>$/);
+      const address = match?.groups?.address.trim() ?? entry;
+      const name = match?.groups?.name.trim() || address.split("@")[0] || address;
+
+      return { name, address };
+    });
+}
+
+export function createSentMessage(draft: DraftMessage, account: Account): MailMessage {
   const now = new Date();
+  const recipients = parseContacts(draft.to);
+  const cc = parseContacts(draft.cc);
 
   return {
     id: `sent-${now.getTime()}`,
-    accountId,
+    accountId: account.id,
     folder: "sent",
-    from: { name: "MailGUI233", address: "desk@neko233.com" },
-    to: draft.to
-      .split(",")
-      .map((address) => address.trim())
-      .filter(Boolean)
-      .map((address) => ({ name: address.split("@")[0] ?? address, address })),
-    cc: draft.cc
-      ? draft.cc
-          .split(",")
-          .map((address) => address.trim())
-          .filter(Boolean)
-          .map((address) => ({ name: address.split("@")[0] ?? address, address }))
-      : undefined,
+    from: { name: account.name, address: account.address },
+    to: recipients,
+    cc: cc.length > 0 ? cc : undefined,
     subject: draft.subject || "(no subject)",
     preview: draft.body.slice(0, 120) || "Empty message",
     body: draft.body,
     timestamp: now.toISOString(),
     unread: false,
     starred: false,
-    labels: ["sent"],
+    labels: ["sent", account.provider],
     attachments: [],
     priority: "normal"
   };

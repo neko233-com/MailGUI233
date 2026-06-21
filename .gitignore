@@ -6,6 +6,8 @@ dist/
 dist-electron/
 release/
 out/
+src-tauri/target/
+src-tauri/gen/
 
 # Logs
 *.log
@@ -27,12 +29,14 @@ Thumbs.db
 
 # Test and cache
 coverage/
+playwright-report/
+test-results/
 .vite/
 .cache/
 output/
 .playwright-cli/
 
-# Electron signing artifacts
+# Signing artifacts
 *.p12
 *.pfx
 *.mobileprovision

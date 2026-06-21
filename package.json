@@ -1,67 +1,39 @@
 {
   "name": "mailgui233",
   "version": "0.1.0",
-  "description": "Cross-platform desktop mail GUI built with Electron, TypeScript, React, and Vite.",
+  "description": "Small cross-platform desktop mail GUI built with Tauri, TypeScript, React, and Vite.",
   "author": "neko233-com",
   "license": "MIT",
   "type": "module",
-  "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"npm:dev:electron\"",
-    "dev:electron": "wait-on tcp:5173 && tsc -p electron/tsconfig.json && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .",
-    "typecheck": "tsc --noEmit && tsc -p electron/tsconfig.json --noEmit",
-    "build": "tsc --noEmit && vite build && tsc -p electron/tsconfig.json",
-    "dist": "npm run build && electron-builder",
+    "dev": "tauri dev",
+    "dev:web": "vite --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "build:renderer": "vite build",
+    "build:fast": "npm run build:renderer",
+    "build": "npm run typecheck && npm run build:fast",
+    "test:e2e": "playwright test",
+    "verify:visual": "npm run build && npm run test:e2e",
+    "package:smoke": "tauri build --no-bundle --ci --config ./src-tauri/tauri.no-build.conf.json",
+    "ci:tauri-smoke": "npm run build:renderer && npm run package:smoke",
+    "package": "tauri build",
+    "dist": "tauri build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^5.1.2",
-    "lucide-react": "^0.562.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "@tauri-apps/api": "^2.11.1",
+    "lucide-react": "^1.21.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3",
-    "@types/react": "^19.2.7",
+    "@playwright/test": "^1.61.0",
+    "@tauri-apps/cli": "^2.11.3",
+    "@types/node": "^26.0.0",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "concurrently": "^9.2.1",
-    "cross-env": "^10.1.0",
-    "electron": "^39.2.7",
-    "electron-builder": "^26.0.12",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.0",
-    "wait-on": "^9.0.3"
-  },
-  "build": {
-    "appId": "com.neko233.mailgui233",
-    "productName": "MailGUI233",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "dist-electron/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        "nsis",
-        "zip"
-      ]
-    },
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "category": "public.app-category.productivity"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "category": "Office"
-    }
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
   }
 }

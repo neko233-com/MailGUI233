@@ -1,9 +1,13 @@
 /// <reference types="vite/client" />
 
-import type { MailGUI233Bridge } from "../electron/preload";
+interface MailGUI233Bridge {
+  getPlatform: () => Promise<string>;
+}
 
 declare global {
   interface Window {
     mailgui233?: MailGUI233Bridge;
   }
 }
+
+export {};

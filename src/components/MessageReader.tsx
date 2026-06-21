@@ -1,7 +1,8 @@
 import { Archive, Mail, Reply, Star, Trash2 } from "lucide-react";
-import type { MailMessage } from "../types";
+import type { Account, MailMessage } from "../types";
 
 interface MessageReaderProps {
+  account?: Account;
   message?: MailMessage;
   onArchive: () => void;
   onDelete: () => void;
@@ -15,6 +16,7 @@ const longDate = new Intl.DateTimeFormat("en", {
 });
 
 export function MessageReader({
+  account,
   message,
   onArchive,
   onDelete,
@@ -36,6 +38,11 @@ export function MessageReader({
       <header className="reader-header">
         <div>
           <h2>{message.subject}</h2>
+          {account ? (
+            <span className="reader-channel">
+              {account.provider.toUpperCase()} / {account.name} / {account.status.replace("-", " ")}
+            </span>
+          ) : null}
           <p>
             From <strong>{message.from.name}</strong> &lt;{message.from.address}&gt;
           </p>

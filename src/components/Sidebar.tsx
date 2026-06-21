@@ -1,93 +1,149 @@
-import { Archive, Inbox, Send, Star, Trash2, FileText } from "lucide-react";
-import type { Account, Folder, FolderId, MailMessage } from "../types";
+import {
+  Archive,
+  CalendarDays,
+  FileText,
+  Inbox,
+  Send,
+  Settings,
+  Star,
+  Trash2
+} from "lucide-react";
+import type { CSSProperties } from "react";
+import type { LucideIcon } from "lucide-react";
+import type { Account, AccountScope, Folder, FolderId, MailboxTabId, MailMessage } from "../types";
 
-const folderIcons = {
+const tabIcons: Record<MailboxTabId, LucideIcon> = {
   inbox: Inbox,
+  timetable: CalendarDays,
   starred: Star,
   sent: Send,
   drafts: FileText,
   archive: Archive,
-  trash: Trash2
+  trash: Trash2,
+  channels: Settings
 };
+
+const primaryTabs: MailboxTabId[] = ["inbox", "timetable", "starred", "sent", "drafts", "archive", "trash", "channels"];
 
 interface SidebarProps {
   accounts: Account[];
   folders: Folder[];
-  activeAccountId: string;
-  activeFolder: FolderId;
+  activeAccountId: AccountScope;
+  activeTab: MailboxTabId;
   messages: MailMessage[];
-  onAccountChange: (accountId: string) => void;
-  onFolderChange: (folderId: FolderId) => void;
+  onAccountChange: (accountId: AccountScope) => void;
+  onTabChange: (tabId: MailboxTabId) => void;
+}
+
+function accountInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function scopeMatches(message: MailMessage, accountId: AccountScope) {
+  return accountId === "all" || message.accountId === accountId;
 }
 
 export function Sidebar({
   accounts,
   folders,
   activeAccountId,
-  activeFolder,
+  activeTab,
   messages,
   onAccountChange,
-  onFolderChange
+  onTabChange
 }: SidebarProps) {
+  const folderById = new Map(folders.map((folder) => [folder.id, folder]));
+  const activeAccount = activeAccountId === "all" ? undefined : accounts.find((account) => account.id === activeAccountId);
+  const accountCountLabel = activeAccount ? activeAccount.address : `${accounts.length} mailboxes`;
+
+  const unreadForScope = (accountId: AccountScope) =>
+    messages.filter((message) => scopeMatches(message, accountId) && message.unread && message.folder !== "trash").length;
+
   const unreadByFolder = (folderId: FolderId) =>
     messages.filter(
       (message) =>
-        message.accountId === activeAccountId &&
+        scopeMatches(message, activeAccountId) &&
         message.unread &&
         (folderId === "starred" ? message.starred : message.folder === folderId)
     ).length;
 
   return (
     <aside className="sidebar" aria-label="Mail navigation">
-      <div className="brand">
-        <div className="brand-mark">M</div>
-        <div>
-          <h1>MailGUI233</h1>
-          <p>Desktop mail hub</p>
+      <section className="mailbox-column" aria-label="Mailboxes">
+        <div className="mailbox-brand" aria-hidden="true">
+          <span>M</span>
         </div>
-      </div>
 
-      <div className="account-switcher" aria-label="Accounts">
-        {accounts.map((account) => (
+        <div className="account-tablist" role="tablist" aria-orientation="vertical" aria-label="Mailbox list">
           <button
-            key={account.id}
-            className={`account-button ${activeAccountId === account.id ? "is-active" : ""}`}
-            style={{ "--account-accent": account.accent } as React.CSSProperties}
-            onClick={() => onAccountChange(account.id)}
+            className={`account-tab ${activeAccountId === "all" ? "is-active" : ""}`}
+            onClick={() => onAccountChange("all")}
+            role="tab"
+            aria-selected={activeAccountId === "all"}
+            aria-label={`All mailboxes, ${unreadForScope("all")} unread`}
             type="button"
           >
-            <span className="account-dot" />
-            <span>
-              <strong>{account.name}</strong>
-              <small>{account.address}</small>
-            </span>
+            <span className="account-glyph all-glyph">All</span>
+            <strong>All</strong>
+            <em>{unreadForScope("all")}</em>
           </button>
-        ))}
-      </div>
 
-      <nav className="folder-list" aria-label="Folders">
-        {folders.map((folder) => {
-          const Icon = folderIcons[folder.id];
-          const unread = unreadByFolder(folder.id);
-          return (
+          {accounts.map((account) => (
             <button
-              key={folder.id}
-              className={`folder-button ${activeFolder === folder.id ? "is-active" : ""}`}
-              onClick={() => onFolderChange(folder.id)}
+              key={account.id}
+              className={`account-tab status-${account.status} ${activeAccountId === account.id ? "is-active" : ""}`}
+              onClick={() => onAccountChange(account.id)}
+              role="tab"
+              aria-selected={activeAccountId === account.id}
+              aria-label={`${account.name}, ${account.provider.toUpperCase()}, ${account.status.replace("-", " ")}`}
+              style={{ "--account-accent": account.accent } as CSSProperties}
               type="button"
             >
-              <Icon size={18} />
-              <span>{folder.label}</span>
-              {unread > 0 ? <em>{unread}</em> : null}
+              <span className="account-glyph">{accountInitials(account.name)}</span>
+              <strong>{account.name.replace(" Mail", "")}</strong>
+              <em>{unreadForScope(account.id)}</em>
             </button>
-          );
-        })}
-      </nav>
+          ))}
+        </div>
+      </section>
 
-      <div className="sidebar-footer">
-        <strong>Local first</strong>
-        <span>UI state runs offline. Provider sync layer can plug into Electron IPC.</span>
-      </div>
+      <section className="function-column" aria-label="Mailbox functions">
+        <header className="function-header">
+          <span>Mailbox</span>
+          <strong>{activeAccount?.name ?? "All mailboxes"}</strong>
+          <small>{accountCountLabel}</small>
+        </header>
+
+        <nav className="function-tablist" role="tablist" aria-orientation="vertical" aria-label="Mailbox tabs">
+          {primaryTabs.map((tabId) => {
+            const Icon = tabIcons[tabId];
+            const folder = folderById.get(tabId as FolderId);
+            const label =
+              tabId === "timetable" ? "Timetable" : tabId === "channels" ? "Channels" : folder?.label ?? tabId;
+            const unread = folder ? unreadByFolder(folder.id) : 0;
+
+            return (
+              <button
+                key={tabId}
+                className={`function-tab ${activeTab === tabId ? "is-active" : ""}`}
+                onClick={() => onTabChange(tabId)}
+                role="tab"
+                aria-selected={activeTab === tabId}
+                type="button"
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+                {unread > 0 ? <em>{unread}</em> : null}
+              </button>
+            );
+          })}
+        </nav>
+      </section>
     </aside>
   );
 }

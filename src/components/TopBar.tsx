@@ -1,6 +1,5 @@
 import { Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { Account } from "../types";
 
 interface Action {
   label: string;
@@ -11,19 +10,20 @@ interface Action {
 }
 
 interface TopBarProps {
-  account: Account;
+  title: string;
+  subtitle: string;
   query: string;
   syncing: boolean;
   actions: Action[];
   onQueryChange: (value: string) => void;
 }
 
-export function TopBar({ account, query, syncing, actions, onQueryChange }: TopBarProps) {
+export function TopBar({ title, subtitle, query, syncing, actions, onQueryChange }: TopBarProps) {
   return (
     <header className="topbar">
       <div className="topbar-title">
-        <strong>{account.name}</strong>
-        <span>{syncing ? "Syncing mailbox..." : account.address}</span>
+        <strong>{title}</strong>
+        <span>{syncing ? "Syncing mailbox..." : subtitle}</span>
       </div>
 
       <label className="searchbox">
