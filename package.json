@@ -5,11 +5,16 @@
   "author": "neko233-com",
   "license": "MIT",
   "type": "module",
+  "packageManager": "npm@11.9.0",
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
+  },
   "scripts": {
     "dev": "tauri dev",
     "dev:web": "vite --host 127.0.0.1",
     "tauri": "tauri",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "build:renderer": "vite build",
     "build:fast": "npm run build:renderer",
     "build": "npm run typecheck && npm run build:fast",
@@ -30,11 +35,11 @@
   "devDependencies": {
     "@playwright/test": "^1.61.0",
     "@tauri-apps/cli": "^2.11.3",
-    "@types/node": "^26.0.0",
+    "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@typescript/native-preview": "^7.0.0-dev.20260621.1",
     "@vitejs/plugin-react": "^6.0.2",
-    "typescript": "^6.0.3",
     "vite": "^8.0.16"
   }
 }

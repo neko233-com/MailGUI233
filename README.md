@@ -26,6 +26,11 @@ npm run build
 npm run dist
 ```
 
+## Toolchain
+
+- Node.js 24 LTS is enforced through `engines`, `.nvmrc`, `.node-version`, and `.npmrc`.
+- Type checking uses TypeScript 7 native preview via `@typescript/native-preview` and `tsgo`.
+
 ## Notes
 
 Current app ships complete local GUI logic with seeded multi-provider mail data and visual channel validation. Real Gmail/Microsoft OAuth, QQ/NetEase authorization-code login, Proton Bridge, and custom IMAP/SMTP sync should be added behind Tauri commands, so credentials stay outside the renderer.
