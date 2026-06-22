@@ -1,3 +1,8 @@
+Quick install (one click):
+
+- PowerShell: `powershell -ExecutionPolicy Bypass -File .\scripts\mailgui233.ps1 install`
+- Bash: `sh scripts/mailgui233.sh install`
+
 # MailGUI233
 
 Small, fast desktop mail GUI for Gmail, QQ Mail, Outlook, iCloud, NetEase, Proton Bridge, and custom IMAP/SMTP.
